@@ -1,20 +1,19 @@
 from .shell import Shell
+from .kernel import Kernel
 
 class System:
-    __shell: Shell
-
     def __init__(self) -> None:
-        pass
-
+        self.__kernel: Kernel = Kernel()
+        self.__shell: Shell = Shell(self.__kernel)
+        
     def run(self) -> None:
-        print("Starting os...")
         while True:
-            print("Starting os shell session...")
-            self.__shell = Shell()
             try:
                 self.__shell.runInteractive()
-            except:
+            except Exception:
                 print("Shutdown...")
                 break
+            self.__shell = Shell(self.__kernel) # Reboots shell
+
 
 

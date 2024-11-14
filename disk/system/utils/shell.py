@@ -1,5 +1,6 @@
 import os
 from .instructions import  Instructions
+from .kernel import Kernel
 from colorama import Fore, Style
 
 # Shell lib
@@ -13,15 +14,16 @@ class Shell:
         EXIT = 518          # System shutdown
         REBOOT = 519        # System reboot
 
-    def __init__(self, user = "user", system: str = "system") -> None:
+    def __init__(self, kernel: Kernel, user = "user", system: str = "system") -> None:
         print("Shell initialization...")
-        self.__location = "/home/"
+        self.__location: str = "/home/"
+        self__KERNEL: Kernel = kernel
         self.__USER: str = user
         self.__SYSTEM: str = system
         self.__SCRIPTS: dict = {}
         print("Loading shell scripts...")
         self.__loadScripts()
-        print(f"Shell initialized!\nWelcome {self.__USER}!")
+        print(f"Shell initialized\n\nWelcome {self.__USER}!")
 
     # Private
     def __loadScripts(self) -> None:
@@ -93,7 +95,6 @@ class Shell:
                 case "exit":
                     if self.__checkSegments(segments):
                         return Shell.Codes.INVALID
-                    print("System closing")
                     return Shell.Codes.EXIT
                 case _:
                     if segments[0] in self.__SCRIPTS: # Checks saved scripts
