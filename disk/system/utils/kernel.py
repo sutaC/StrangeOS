@@ -203,6 +203,37 @@ class Kernel:
             out += "/"
         return  out
     
+    # @returns {tuple[name: str, type: str, parent_id: int]}
+    def get_node(self, id: int) -> tuple[str, str, int]:
+        cursor = self.__conn.cursor()
+        node = cursor.execute("SELECT name, type, parent_id FROM nodes WHERE id = ?", [id])
+        cursor.close()
+        return node
+    
+    def get_node_path(self, path: str) -> int:
+        curr: int = self.__root
+        segments: list[str] = path.split("/")
+        for seg in segments:
+            if not self.is_directory(curr):
+                raise Exception("Wrong path, not directories cannot have children", path, seg)
+            match seg:
+                case "." | "":
+                    continue
+                case "..":
+                    if self.is_root_directory(curr):
+                        continue
+                    curr = self.get_node(curr)[2] # Set curr = parent_id
+                case _:
+                    nodes = self.list_directory(curr)
+                    for node in nodes: # Searches for node in directory list
+                        if seg == node[1]: 
+                            curr = node[0]
+                            break
+                    else:
+                        # Node not found in directory list
+                        raise Exception("Wrong path, cannot find directory", path, seg)
+        return curr
+    
     # @returns {list[tuple[id: int, name: str, type: str]]}
     def list_directory(self, id: int) -> list[tuple[int, str, str]]:
         cursor = self.__conn.cursor()
