@@ -1,0 +1,17 @@
+*** HELP ***
+
+## Helpfull instructions
+help                    - displays this message
+clear                   - clears console
+pwd                     - displays current directory
+ls                      - displays all files and subdirectories in current locations
+cd [directory]          - changes current directory ("~" refers to your home directory)
+cat [file path]         - displays contents of a files
+run [file path]         - runs contents of a files with shell
+echo [text ...]         - displays given text
+exit                    - exits os
+reboot                  - reboots os
+
+## Tips
+- Paths and directories cannot contain spaces
+- You can add your own scripts to /bin/ directory!
