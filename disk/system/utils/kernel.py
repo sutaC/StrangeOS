@@ -1,5 +1,16 @@
 import sqlite3
 
+class MissingNodeException(Exception):
+    pass
+class NodeTypeException(Exception):
+    pass
+class NodeNameConflictException(Exception):
+    pass
+class SystemNodeException(Exception):
+    pass
+class NodeHasChildrenException(Exception):
+    pass
+
 class Kernel:
     __DB: str = "filesystem.db"
 
@@ -78,9 +89,9 @@ class Kernel:
     # @returns {int} directory id
     def create_directory(self,  name: str, parent_id: int) -> int:
         if not self.is_directory(parent_id):
-            raise Exception("Tried to create children to not directory parent", parent_id, name)
+            raise NodeTypeException("Tried to create children to not directory parent", parent_id, name)
         if self.is_node_in_directory(name, parent_id):
-            raise Exception("This directory already exists", parent_id, name)
+            raise NodeNameConflictException("This directory already exists", parent_id, name)
         cursor = self.__conn.cursor()
         cursor.execute("INSERT INTO nodes (id, name, type, parent_id) VALUES (NULL, ?, 'directory', ?)", [name, parent_id])
         self.__conn.commit()
@@ -90,9 +101,9 @@ class Kernel:
     
     def create_file(self, parent_id: int, name: str, contents: str = "", metadata: str = None) -> int:
         if not self.is_directory(parent_id):
-            raise Exception("Tried to create children to not directory parent", parent_id, name)
+            raise NodeTypeException("Tried to create children to not directory parent", parent_id, name)
         if self.is_node_in_directory(name, parent_id):
-            raise Exception("This file already exists", name, parent_id)
+            raise NodeNameConflictException("This file already exists", name, parent_id)
         cursor = self.__conn.cursor()
         cursor.execute("INSERT INTO nodes (id, name, type, parent_id) VALUES (NULL, ?, 'file', ?)", [name, parent_id])
         id = cursor.lastrowid
@@ -103,11 +114,11 @@ class Kernel:
         
     def delete_directory(self, id: int) -> None:
         if self.is_root_directory(id):
-            raise Exception("Cannot delete root directory", id)
+            raise SystemNodeException("Cannot delete root directory", id)
         if not self.is_directory(id):
-            raise Exception("This is not directory", id)
+            raise NodeTypeException("This is not directory", id)
         if not self.is_directory_empty(id):
-            raise Exception("This directory is not empty, use `delete_directory_recusively` to delete not empty directory", id)
+            raise NodeHasChildrenException("This directory is not empty, use `delete_directory_recusively` to delete not empty directory", id)
         cursor = self.__conn.cursor()
         cursor.execute("DELETE FROM nodes WHERE id = ?", [id])
         self.__conn.commit()
@@ -115,7 +126,7 @@ class Kernel:
 
     def delete_directory_recusively(self, id: int) -> None:
         if self.is_root_directory(id):
-            raise Exception("Cannot delete root directory", id)
+            raise SystemNodeException("Cannot delete root directory", id)
         if self.is_directory(id):
             for child in self.list_directory(id):
                 if child[2] == "directory": # type
@@ -128,7 +139,7 @@ class Kernel:
 
     def delete_file(self, id: int) -> None:
         if not self.is_file(id):
-            raise Exception("Not a file provided", id)
+            raise NodeTypeException("Not a file provided", id)
         cursor = self.__conn.cursor()
         cursor.execute("DELETE FROM nodes WHERE id = ?", [id])
         cursor.execute("DELETE FROM files WHERE node_id = ?", [id])
@@ -144,9 +155,9 @@ class Kernel:
 
     def move_node(self, id: int, parent_id: int):
         if self.is_root_directory(int):
-            raise Exception("Cannot move root directory", id)
+            raise SystemNodeException("Cannot move root directory", id)
         if not self.is_directory(parent_id): 
-            raise Exception("Tried to move node to not directory parent", id, parent_id)
+            raise NodeTypeException("Tried to move node to not directory parent", id, parent_id)
         cursor = self.__conn.cursor()
         cursor.execute("UPDATE nodes SET parent_id = ? WHERE id = ?", [parent_id, id])
         self.__conn.commit()
@@ -154,7 +165,7 @@ class Kernel:
 
     def get_file_metadata(self, id: int) ->  str | None:
         if not self.is_file(id):
-            raise Exception("Not a file provided", id)
+            raise NodeTypeException("Not a file provided", id)
         cursor = self.__conn.cursor()
         file = cursor.execute("SELECT metadata FROM files WHERE node_id = ?", [id]).fetchone()
         cursor.close()
@@ -162,7 +173,7 @@ class Kernel:
     
     def update_file_metadata(self, id: int, metadata: str | None) -> None:
         if not self.is_file(id):
-            raise Exception("Not a file provided", id)
+            raise NodeTypeException("Not a file provided", id)
         cursor = self.__conn.cursor()
         cursor.execute("UPDATE files SET metadata = ? WHERE node_id = ?", [metadata, id])
         self.__conn.commit()
@@ -170,7 +181,7 @@ class Kernel:
 
     def read_file(self, id: int) ->  str | None:
         if not self.is_file(id):
-            raise Exception("Not a file provided", id)
+            raise NodeTypeException("Not a file provided", id)
         cursor = self.__conn.cursor()
         file = cursor.execute("SELECT contents FROM files WHERE node_id = ?", [id]).fetchone()
         cursor.close()
@@ -178,7 +189,7 @@ class Kernel:
     
     def write_to_file(self, id: int, contents: str | None) -> None:
         if not self.is_file(id):
-            raise Exception("Not a file provided", id)
+            raise NodeTypeException("Not a file provided", id)
         cursor = self.__conn.cursor()
         cursor.execute("UPDATE files SET contents = ? WHERE node_id = ?", [contents, id])
         self.__conn.commit()
@@ -186,7 +197,7 @@ class Kernel:
 
     def append_to_file(self, id: int, contents: str) -> None:
         if not self.is_file(id):
-            raise Exception("Not a file provided", id)
+            raise NodeTypeException("Not a file provided", id)
         cursor = self.__conn.cursor()
         cursor.execute("UPDATE files SET contents = contents || ? WHERE node_id = ?", [contents, id])
         self.__conn.commit()
@@ -204,7 +215,7 @@ class Kernel:
         return  out
     
     # @returns {tuple[name: str, type: str, parent_id: int]}
-    def get_node(self, id: int) -> tuple[str, str, int]:
+    def get_node(self, id: int) -> tuple[str, str, int] | None:
         cursor = self.__conn.cursor()
         node = cursor.execute("SELECT name, type, parent_id FROM nodes WHERE id = ?", [id])
         cursor.close()
@@ -215,14 +226,17 @@ class Kernel:
         segments: list[str] = path.split("/")
         for seg in segments:
             if not self.is_directory(curr):
-                raise Exception("Wrong path, not directories cannot have children", path, seg)
+                raise NodeTypeException("Wrong path, not directories cannot have children", path, seg)
             match seg:
                 case "." | "":
                     continue
                 case "..":
                     if self.is_root_directory(curr):
                         continue
-                    curr = self.get_node(curr)[2] # Set curr = parent_id
+                    node = self.get_node(curr)
+                    if node is None:
+                        raise MissingNodeException
+                    curr = node[2] # Set curr = parent_id
                 case _:
                     nodes = self.list_directory(curr)
                     for node in nodes: # Searches for node in directory list
@@ -231,7 +245,7 @@ class Kernel:
                             break
                     else:
                         # Node not found in directory list
-                        raise Exception("Wrong path, cannot find directory", path, seg)
+                        raise MissingNodeException
         return curr
     
     # @returns {list[tuple[id: int, name: str, type: str]]}

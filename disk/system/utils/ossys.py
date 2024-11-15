@@ -1,19 +1,30 @@
 from .shell import Shell
 from .kernel import Kernel
+from .taskcontroller import TaskController
+from traceback import print_exc
 
+# System
 class System:
-    def __init__(self) -> None:
-        self.__kernel: Kernel = Kernel()
-        self.__shell: Shell = Shell(self.__kernel)
-        
-    def run(self) -> None:
-        while True:
-            try:
-                self.__shell.runInteractive()
-            except Exception:
-                print("Shutdown...")
-                break
-            self.__shell = Shell(self.__kernel) # Reboots shell
+    verbose: bool = True # For debugging
 
+    def __init__(self) -> None:
+        self._TASKC: TaskController = TaskController()
+        self._KERNEL: Kernel = Kernel()
+        self._SHELL: Shell = Shell(self._KERNEL, self._TASKC)
+
+    def run(self) -> None:
+        self._TASKC.addTask(self._SHELL.runInteractive)
+        while not self._TASKC.isEmpty():
+            task = self._TASKC.getTask()
+            try:
+                result = task()
+                if result != 0 and result is not None:
+                    print(f"Task exited with code {result}")       
+            except Exception as exc:
+                print("Unexpected error occurred", exc, sep="\n")
+                if self.verbose:
+                    print_exc()
+                return
+        print("Closing system...")
 
 

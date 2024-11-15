@@ -10,7 +10,6 @@ cat [file path]         - displays contents of a files
 run [file path]         - runs contents of a files with shell
 echo [text ...]         - displays given text
 exit                    - exits os
-reboot                  - reboots os
 
 ## Tips
 - Paths and directories cannot contain spaces
