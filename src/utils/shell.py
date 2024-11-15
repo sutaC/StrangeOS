@@ -142,6 +142,10 @@ class Shell:
                     self.__TASKC.emptyTasks()
                     return 0
                 return fun
+            case "":
+                def fun():
+                    return 0
+                return fun
             case _:
                 if segments[0] in self.__SCRIPTS: # Checks saved scripts
                     def fun():

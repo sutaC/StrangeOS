@@ -1,0 +1,3 @@
+#!/bin/bash
+# Removes filesystem
+rm filesystem.db

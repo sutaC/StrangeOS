@@ -1,5 +1,6 @@
 import sqlite3
 import os
+from colorama import Fore
 
 class MissingNodeException(Exception):
     pass
@@ -49,7 +50,11 @@ class Kernel:
         ''').fetchone()
         cursor.close()
         if self.__root is None: # Adds root directory if doesn't exist
-            self.__root = self.__initFilesystem()
+            try:
+                self.__root = self.__initFilesystem()
+            except Exception as exc:
+                print(Fore.RED, "Kernel error - cannot initiate filesystem", exc, "Filesystem might be corrupted and not functionate correctly, try to delete filesystem and try again", Fore.RESET, sep="\n")
+                raise SystemExit
         else:
             self.__root = self.__root[0] # Dicscards tuple
         print("Kernel connected")
@@ -69,17 +74,18 @@ class Kernel:
         cursor.execute("INSERT INTO nodes (id, name, parent_id, type) VALUES (NULL, 'root', NULL, 'directory')")
         self.__conn.commit()  
         cursor.close()
-        ROOT = cursor.lastrowid
+        ROOT: int = cursor.lastrowid
         # Add folders
-        HOME = self.create_directory("home", ROOT)
-        BIN = self.create_directory("bin", ROOT)
-        ETC = self.create_directory("etc", ROOT)
+        HOME: int = self.create_directory("home", ROOT)
+        BIN: int = self.create_directory("bin", ROOT)
+        ETC: int = self.create_directory("etc", ROOT)
         # Add files
-        with open("../system-data/helpmsg.txt", "r") as file:
+        os.chdir("src/data")
+        with open("helpmsg.txt") as file:
             self.create_file(ETC, "help.txt", file.read())
-        with open("../system-data/greet.txt", "r") as file:
+        with open("greetmsg.txt") as file:
             self.create_file(HOME, "hello.txt", file.read())
-        with open("../system-data/hi.scr", "r") as file:
+        with open("hi.scr") as file:
             self.create_file(BIN, "hi", file.read())
         # Finish
         return ROOT
@@ -243,7 +249,7 @@ class Kernel:
     # @returns {tuple[name: str, type: str, parent_id: int]}
     def get_node(self, id: int) -> tuple[str, str, int] | None:
         cursor = self.__conn.cursor()
-        node = cursor.execute("SELECT name, type, parent_id FROM nodes WHERE id = ?", [id])
+        node = cursor.execute("SELECT name, type, parent_id FROM nodes WHERE id = ?", [id]).fetchone()
         cursor.close()
         return node
     
