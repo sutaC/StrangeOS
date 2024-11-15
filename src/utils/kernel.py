@@ -1,4 +1,5 @@
 import sqlite3
+import os
 
 class MissingNodeException(Exception):
     pass
@@ -16,6 +17,10 @@ class Kernel:
 
     def __init__(self) -> None:
         print("Kernel connecting...")
+
+        if not os.path.isfile(self.__DB):
+            pass
+
         self.__conn: sqlite3.Connection = sqlite3.connect(self.__DB) 
         self.__root: int
         # Inits database
@@ -42,21 +47,42 @@ class Kernel:
         self.__root = cursor.execute('''
             SELECT id FROM nodes WHERE parent_id IS NULL
         ''').fetchone()
+        cursor.close()
         if self.__root is None: # Adds root directory if doesn't exist
-            cursor.execute('''
-                INSERT INTO nodes (id, name, parent_id, type) VALUES (NULL, 'root', NULL, 'directory')               
-            ''')
-            self.__conn.commit()  
-            self.__root = cursor.lastrowid
+            self.__root = self.__initFilesystem()
         else:
             self.__root = self.__root[0] # Dicscards tuple
-        cursor.close()
         print("Kernel connected")
 
     def __del__(self) -> None:
         print("Closing kernel connection...")
         self.__conn.close()
         print("Kernel connection closed")
+
+    # Private
+    # @returns {int} root node id
+    def __initFilesystem(self) -> int:
+        # Clears system
+        self.prune_system()
+        # Creates root node
+        cursor = self.__conn.cursor()
+        cursor.execute("INSERT INTO nodes (id, name, parent_id, type) VALUES (NULL, 'root', NULL, 'directory')")
+        self.__conn.commit()  
+        cursor.close()
+        ROOT = cursor.lastrowid
+        # Add folders
+        HOME = self.create_directory("home", ROOT)
+        BIN = self.create_directory("bin", ROOT)
+        ETC = self.create_directory("etc", ROOT)
+        # Add files
+        with open("../system-data/helpmsg.txt", "r") as file:
+            self.create_file(ETC, "help.txt", file.read())
+        with open("../system-data/greet.txt", "r") as file:
+            self.create_file(HOME, "hello.txt", file.read())
+        with open("../system-data/hi.scr", "r") as file:
+            self.create_file(BIN, "hi", file.read())
+        # Finish
+        return ROOT
 
     # Public
     def is_file(self, id: int) -> bool:

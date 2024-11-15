@@ -56,7 +56,6 @@ class Shell:
 
     def __interpretInstruction(self, instruction: str) -> FunctionType:
         segments: list[str] = instruction.split(" ")
-        # print(segments) # Debugging
         match segments[0]:
             case "help":
                 def fun():
