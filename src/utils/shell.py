@@ -25,19 +25,25 @@ class Shell:
 
     # Private
     def __loadScripts(self) -> None:
-        pass
         # TODO
-        # self.__SCRIPTS.clear()
-        # scripts = Instructions.ls("/bin/").split(" ")
-        # for scr in scripts:
-        #     if len(scr) == 0:
-        #         continue
-        #     DIR = Instructions.run("/bin/", scr)
-        #     if DIR is None:
-        #         print(f"* Error while loading script `{scr}`")
-        #         continue
-        #     print(f"* Successfully loaded script `{scr}`")
-        #     self.__SCRIPTS[scr] = DIR
+        self.__SCRIPTS.clear()
+        binId: int
+        try:
+            binId = self.__KERNEL.get_node_path("/bin")
+        except:
+            print("Could not find bin dir to load scripts")
+            return
+        # (id: int, name: str, type: str)
+        scripts = self.__KERNEL.list_directory(binId)
+        for scr in scripts:                
+            scrPath: str
+            try:
+                scrPath = self.__KERNEL.get_absolute_path(scr[0]) # <id>
+            except:
+                print(f"Could not load script - `{scr[1]}`")
+                continue
+            self.__SCRIPTS[scr[1]] = scrPath # [<name>] = <path>
+            print(f"* Successfully loaded script `{scr[1]}`")
 
     def __joinPath(self, destination: str) -> str:
         newDir: str = ""
