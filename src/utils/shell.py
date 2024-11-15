@@ -59,9 +59,13 @@ class Shell:
         match segments[0]:
             case "help":
                 def fun():
-                    print("Help msg") # TODO
-                    # with open(Instructions.__getDiskDirectory("/system/settings/helpmsg.txt")) as file:
-                    #     print(file.read())
+                    nodeId: int
+                    try:
+                        nodeId = self.__KERNEL.get_node_path("/etc/help.txt")
+                    except MissingNodeException:
+                        print("Cannot find help message")
+                        return 1
+                    print(self.__KERNEL.read_file(nodeId) or "HELP MISSING")
                     return 0
                 return fun
             case "clear":
