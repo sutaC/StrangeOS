@@ -25,7 +25,6 @@ class Shell:
 
     # Private
     def __loadScripts(self) -> None:
-        # TODO
         self.__SCRIPTS.clear()
         binId: int
         try:
@@ -58,6 +57,23 @@ class Shell:
             if not newDir.endswith("/"):
                 newDir += "/"
             newDir += destination
+        # Path cleaning
+        sdirs: list[str] = newDir.split("/")
+        i: int = 0
+        while 0 <= i < len(sdirs):
+            match sdirs[i]:
+                case "." | "":
+                    sdirs.pop(i)
+                case  "..":
+                    sdirs.pop(i)
+                    i -= 1
+                    if 0 <= i < len(sdirs):
+                        sdirs.pop(i)
+                case _:
+                    i += 1
+        newDir =  "/".join(sdirs) + "/"
+        if len(sdirs) > 0:
+            newDir = "/" + newDir
         return newDir
 
     def __interpretInstruction(self, instruction: str) -> FunctionType:
