@@ -10,6 +10,7 @@ cat [file path]         - displays contents of a files
 run [file path]         - runs contents of a files with shell
 echo (text ...)         - displays given text
 mkdir [path]            - creates directory in given path
+rm [path]               - removes given file or directory (also removes all directory children)
 exit                    - exits os
 
 ## Tips

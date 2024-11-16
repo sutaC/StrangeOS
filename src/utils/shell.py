@@ -2,7 +2,7 @@ import os
 from types import FunctionType
 from colorama import Fore, Style
 from .taskcontroller import TaskController
-from .kernel import Kernel, MissingNodeException, NodeNameConflictException, NodeTypeException
+from .kernel import Kernel, MissingNodeException, NodeNameConflictException, NodeTypeException, SystemNodeException
 from .options import SysOptions
 
 # Shell lib
@@ -61,10 +61,7 @@ class Shell:
         elif destination[:2] == "~/":
             newDir = "/home/" + destination[2:]
         else:
-            newDir += self.__location
-            if not newDir.endswith("/"):
-                newDir += "/"
-            newDir += destination
+            newDir += self.__location + "/" + destination
         # Path cleaning
         sdirs: list[str] = newDir.split("/")
         i: int = 0
@@ -79,7 +76,7 @@ class Shell:
                         sdirs.pop(i)
                 case _:
                     i += 1
-        newDir =  "/".join(sdirs) + "/"
+        newDir =  "/".join(sdirs)
         if len(sdirs) > 0:
             newDir = "/" + newDir
         return newDir
@@ -189,13 +186,31 @@ class Shell:
                         print("Missing argument - path")
                         return 1
                     PATH = self.__joinPath(segments[1]).split("/")
-                    NAME = PATH[-2] # Name
-                    DIR = '/'.join(PATH[:-2]) 
+                    NAME = PATH[-1] # Name
+                    DIR = '/'.join(PATH[:-1]) 
                     try:
                         PARENT: int = self.__KERNEL.get_node_path(DIR)
                         self.__KERNEL.create_directory(NAME, PARENT)
                     except (NodeNameConflictException, NodeTypeException, MissingNodeException):
                         print(f"Could not create directory in that path - `{DIR}` `{NAME}`")
+                        return 1
+                    return 0
+                return fun
+            case "rm":
+                def fun():
+                    if(len(segments) < 2):
+                        print("Missing argument - path")
+                    path: str = self.__joinPath(segments[1])
+                    nodeId: int
+                    try:
+                        nodeId = self.__KERNEL.get_node_path(path) 
+                    except (NodeTypeException, MissingNodeException):
+                        print(f"Invalid path - {path}")
+                        return 1
+                    try:
+                        self.__KERNEL.delete_node(nodeId)
+                    except SystemNodeException:
+                        print(f"Cannot delete system directories - {path}")
                         return 1
                     return 0
                 return fun

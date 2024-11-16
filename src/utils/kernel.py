@@ -159,15 +159,17 @@ class Kernel:
         self.__conn.commit()
         cursor.close()
 
-    def delete_directory_recusively(self, id: int) -> None:
+    def delete_node(self, id: int) -> None:
         if self.is_root_directory(id):
             raise SystemNodeException("Cannot delete root directory", id)
         if self.is_directory(id):
             for child in self.list_directory(id):
                 if child[2] == "directory": # type
-                    self.delete_directory_recusively(child[0])
-                else:
+                    self.delete_node(child[0])
+                elif child[2] == "file":
                     self.delete_file(child[0])
+                else:
+                    raise NodeTypeException("Unexcepted file type")
             self.delete_directory(id)
         else:
             self.delete_file(id)

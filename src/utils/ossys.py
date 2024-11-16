@@ -17,7 +17,7 @@ class System:
         if opts is None:
             print(Fore.YELLOW, "Due to missing custom options system loads default options", Fore.RESET)
         else:
-            print(Fore.BLACK, "Loading custom options", Fore.RESET)
+            print(Fore.BLACK, "Loading custom options...", Fore.RESET)
             self._OPTIONS.update(opts)
         # Init subsystems
         self._TASKC: TaskController = TaskController()
