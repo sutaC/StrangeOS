@@ -3,25 +3,33 @@ from types import FunctionType
 from colorama import Fore, Style
 from .taskcontroller import TaskController
 from .kernel import Kernel, MissingNodeException, NodeTypeException
+from .options import SysOptions
 
 # Shell lib
 class Shell:
-    def __init__(self, kernel: Kernel, taskController: TaskController) -> None:
+    def __init__(self, kernel: Kernel, taskController: TaskController, options: SysOptions) -> None:
+        # Init shell
         print("Shell initialization...")
         self.__SCRIPTS: dict = {}
         self.__TASKC: TaskController =  taskController
         self.__KERNEL: Kernel = kernel
-
-        self.__currNode: int = kernel.get_root()
+        self.__OPTIONS: SysOptions = options
+        # Sets initial location
+        self.__currNode: int = self.__KERNEL.get_root()
         self.__location: str = "/"
-
-        # TOADD: users
-        self.__USER: str = "user"
-        self.__SYSNAME: str = "system"
-
+        startlocation = self.__joinPath(self.__OPTIONS["startlocation"])
+        nodeId: int = None
+        try:
+            nodeId = kernel.get_node_path(startlocation)
+        except (NodeTypeException, MissingNodeException):
+            print(Fore.RED, "Could not find starting directory, seting init location to default", Fore.RESET)
+        if nodeId is not None:
+            self.__currNode = nodeId
+            self.__location = startlocation
+        # Loads scripts
         print("Loading shell scripts...")
         self.__loadScripts()
-        print(f"Shell initialized\n\nWelcome {self.__USER}!")
+        print(f"Shell initialized\n\nWelcome {self.__OPTIONS['username']}!")
 
     # Private
     def __loadScripts(self) -> None:
@@ -189,7 +197,7 @@ class Shell:
         if "/home/" in self.__location[:6]:
             loc =  "~" + self.__location[6:]     
         loc =  self.__location
-        return f"{Style.BRIGHT}{Fore.GREEN}{self.__USER}@{self.__SYSNAME}{Fore.RESET}:{Fore.BLUE}{loc}{Fore.RESET}${Style.RESET_ALL} "
+        return f"{Style.BRIGHT}{Fore.GREEN}{self.__OPTIONS['username']}@{self.__OPTIONS['sysname']}{Fore.RESET}:{Fore.BLUE}{loc}{Fore.RESET}${Style.RESET_ALL} "
 
     # Public
     def runFile(self, path: str) -> int:

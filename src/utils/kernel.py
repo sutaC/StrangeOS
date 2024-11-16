@@ -1,6 +1,7 @@
 import sqlite3
 import os
 from colorama import Fore
+from .options import SysOptions
 
 class MissingNodeException(Exception):
     pass
@@ -14,16 +15,17 @@ class NodeHasChildrenException(Exception):
     pass
 
 class Kernel:
-    __DB: str = "filesystem.db"
-
-    def __init__(self) -> None:
-        print("Kernel connecting...")
-
-        if not os.path.isfile(self.__DB):
-            pass
-
-        self.__conn: sqlite3.Connection = sqlite3.connect(self.__DB) 
+    def __init__(self, options: SysOptions) -> None:
+        self.__OPTIONS: SysOptions = options
+        self.__conn:  sqlite3.Connection
         self.__root: int
+        print("Kernel connecting...")
+        # Creating connection
+        try:
+            self.__conn = sqlite3.connect(self.__OPTIONS["dbdir"]) 
+        except:
+            print(Fore.RED, f"Cannot access database file at given directory - `{self.__OPTIONS['dbdir']}`", Fore.RESET, sep="\n")
+            raise SystemExit
         # Inits database
         cursor = self.__conn.cursor()
         # Creates tables
@@ -61,7 +63,8 @@ class Kernel:
 
     def __del__(self) -> None:
         print("Closing kernel connection...")
-        self.__conn.close()
+        if hasattr(self, '__conn'):
+            self.__conn.close()
         print("Kernel connection closed")
 
     # Private

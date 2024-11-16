@@ -3,15 +3,25 @@ from .kernel import Kernel
 from .taskcontroller import TaskController
 from traceback import print_exc
 from colorama import Fore
+from .options import SysOptions, getDefaultOptions, loadOptions 
+
+
 
 # System
 class System:
-    verbose: bool = True # For debugging
-
     def __init__(self) -> None:
+        # Loads options
+        self._OPTIONS: SysOptions = getDefaultOptions()
+        opts = loadOptions()
+        if opts is None:
+            print("Due to missing custom options system loads default options")
+        else:
+            print("Loading custom options")
+            self._OPTIONS.update(opts)
+        # Init subsystems
         self._TASKC: TaskController = TaskController()
-        self._KERNEL: Kernel = Kernel()
-        self._SHELL: Shell = Shell(self._KERNEL, self._TASKC)
+        self._KERNEL: Kernel = Kernel(self._OPTIONS)
+        self._SHELL: Shell = Shell(self._KERNEL, self._TASKC, self._OPTIONS)
 
     def run(self) -> None:
         self._TASKC.addTask(self._SHELL.runInteractive)
@@ -23,7 +33,7 @@ class System:
                     print(f"Task exited with code {result}")       
             except Exception as exc:
                 print(Fore.RED, "Unexpected error occurred", exc, Fore.RESET, sep="\n")
-                if self.verbose:
+                if self._OPTIONS["verbose"]:
                     print_exc()
                 return
         print("Closing system...")
