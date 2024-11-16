@@ -36,6 +36,7 @@ class System:
                 print(Fore.RED, "Unexpected error occurred", exc, Fore.RESET, sep="\n")
                 if self._OPTIONS["verbose"]:
                     print_exc()
+                    print() # Whitespace
                 return
         print(Fore.BLACK, "Closing system...", Fore.RESET)
 

@@ -1,5 +1,6 @@
 import sqlite3
 import os
+from traceback import print_exc
 from colorama import Fore
 from .options import SysOptions
 
@@ -25,6 +26,9 @@ class Kernel:
             self.__conn = sqlite3.connect(self.__OPTIONS["dbdir"]) 
         except:
             print(Fore.RED, f"Cannot access database file at given directory - `{self.__OPTIONS['dbdir']}`", Fore.RESET, sep="\n")
+            if self.__OPTIONS['verbose']:
+                print_exc() 
+                print() # Whitespace
             raise SystemExit
         # Inits database
         cursor = self.__conn.cursor()
@@ -55,7 +59,10 @@ class Kernel:
             try:
                 self.__root = self.__initFilesystem()
             except Exception as exc:
-                print(Fore.RED, "Kernel error - cannot initiate filesystem", exc, "Filesystem might be corrupted and not functionate correctly, try to delete filesystem and try again", Fore.RESET, sep="\n")
+                print(Fore.RED, "Kernel error - cannot initiate filesystem", exc, "Filesystem might be corrupted and not functionate correctly, try to clear filesystem and try again", Fore.RESET, sep="\n")
+                if self.__OPTIONS['verbose']:
+                    print_exc() 
+                    print() # Whitespace
                 raise SystemExit
         else:
             self.__root = self.__root[0] # Dicscards tuple
@@ -85,30 +92,34 @@ class Kernel:
         # Add files
         os.chdir("src/data")
         with open("helpmsg.txt") as file:
-            self.create_file(ETC, "help.txt", file.read())
+            self.create_file("help.txt", ETC, file.read())
         with open("greetmsg.txt") as file:
-            self.create_file(HOME, "hello.txt", file.read())
+            self.create_file("hello.txt", HOME, file.read())
         with open("hi.scr") as file:
-            self.create_file(BIN, "hi", file.read())
+            self.create_file("hi", BIN, file.read())
         # Finish
         return ROOT
 
     # Public
     def is_file(self, id: int) -> bool:
         cursor = self.__conn.cursor()
-        node = cursor.execute("SELECT type FROM nodes WHERE id = ?", [id]).fetchone()
+        node: tuple[str] | None = cursor.execute("SELECT type FROM nodes WHERE id = ?", [id]).fetchone()
         cursor.close()
+        if node is None:
+            return False
         return node[0] == "file"
     
     def is_directory(self, id: int) -> bool:
         cursor = self.__conn.cursor()
-        node = cursor.execute("SELECT type FROM nodes WHERE id = ?", [id]).fetchone()
+        node: tuple[str] | None = cursor.execute("SELECT type FROM nodes WHERE id = ?", [id]).fetchone()
         cursor.close()
+        if node is None:
+            return False
         return node[0] == "directory"
     
     def is_directory_empty(self, id: int) -> bool:
         cursor = self.__conn.cursor()
-        node = cursor.execute("SELECT id FROM nodes WHERE parent_id = ? LIMIT 1", [id]).fetchone()
+        node: tuple[int] | None = cursor.execute("SELECT id FROM nodes WHERE parent_id = ? LIMIT 1", [id]).fetchone()
         cursor.close()
         return node is None
     
@@ -117,7 +128,7 @@ class Kernel:
     
     def is_node_in_directory(self, name: str,  parent_id: int) -> bool:
         cursor = self.__conn.cursor()
-        node = cursor.execute("SELECT id FROM nodes WHERE name = ? AND parent_id = ?", [name, parent_id]).fetchone()
+        node: tuple[int] | None = cursor.execute("SELECT id FROM nodes WHERE name = ? AND parent_id = ?", [name, parent_id]).fetchone()
         cursor.close()
         return node is not None
 
@@ -204,7 +215,7 @@ class Kernel:
         if not self.is_file(id):
             raise NodeTypeException("Not a file provided", id)
         cursor = self.__conn.cursor()
-        file = cursor.execute("SELECT metadata FROM files WHERE node_id = ?", [id]).fetchone()
+        file: tuple[str | None] = cursor.execute("SELECT metadata FROM files WHERE node_id = ?", [id]).fetchone()
         cursor.close()
         return file[0]
     
@@ -220,7 +231,7 @@ class Kernel:
         if not self.is_file(id):
             raise NodeTypeException("Not a file provided", id)
         cursor = self.__conn.cursor()
-        file = cursor.execute("SELECT contents FROM files WHERE node_id = ?", [id]).fetchone()
+        file: tuple[str | None] = cursor.execute("SELECT contents FROM files WHERE node_id = ?", [id]).fetchone()
         cursor.close()
         return file[0]
     
@@ -244,8 +255,10 @@ class Kernel:
         if self.is_root_directory(id):
             return "/"
         cursor = self.__conn.cursor()
-        node = cursor.execute("SELECT name, parent_id, type FROM nodes WHERE id = ?", [id]).fetchone()
+        node: tuple[str, int, str] | None = cursor.execute("SELECT name, parent_id, type FROM nodes WHERE id = ?", [id]).fetchone()
         cursor.close()
+        if node is None:
+            raise MissingNodeException
         out = self.get_absolute_path(node[1]) + node[0]
         if node[2] == "directory":
             out += "/"
@@ -254,7 +267,7 @@ class Kernel:
     # @returns {tuple[name: str, type: str, parent_id: int]}
     def get_node(self, id: int) -> tuple[str, str, int] | None:
         cursor = self.__conn.cursor()
-        node = cursor.execute("SELECT name, type, parent_id FROM nodes WHERE id = ?", [id]).fetchone()
+        node: tuple[str, str, int] | None = cursor.execute("SELECT name, type, parent_id FROM nodes WHERE id = ?", [id]).fetchone()
         cursor.close()
         return node
     
@@ -289,7 +302,7 @@ class Kernel:
     # @returns {list[tuple[id: int, name: str, type: str]]}
     def list_directory(self, id: int) -> list[tuple[int, str, str]]:
         cursor = self.__conn.cursor()
-        nodes = cursor.execute("SELECT id, name, type FROM nodes WHERE parent_id = ?", [id]).fetchall() 
+        nodes: list[tuple[int, str, str]] = cursor.execute("SELECT id, name, type FROM nodes WHERE parent_id = ?", [id]).fetchall() 
         cursor.close()
         return nodes
     
