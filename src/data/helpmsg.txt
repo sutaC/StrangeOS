@@ -19,5 +19,6 @@ exit                    - exits os
 ## Tips
 - Instruction args in () are optional and in [] are required
 - To enter text with spaces sweep it in "" (eg.: "<example> <example>")
+- To escape character use \ symbol (eg.: \" for " or \\ for \)
 - In paths "~" refers to /home/ directory
 - You can add your own scripts to /bin/ directory!

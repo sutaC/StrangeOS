@@ -88,15 +88,17 @@ class Shell:
 
     def __interpretInstruction(self, instruction: str) -> FunctionType:
         # Devides instruction to blocks
+        instruction = instruction.strip()
         segments: list[str] = []
-        seg = ""
-        for ch in instruction.strip():
+        seg: str = ""
+        i: int = 0
+        while i < len(instruction):
+            ch = instruction[i]
             match ch:
                 case " ":
                     if seg.startswith("\""):
                         seg += " "
-                        continue
-                    if len(seg) > 0:
+                    elif len(seg) > 0:
                         segments.append(seg)
                         seg = ""
                 case "\"":
@@ -104,12 +106,16 @@ class Shell:
                         if len(seg) > 1:
                             segments.append(seg[1:])
                         seg = ""
-                        continue
-                    seg += ch
+                    else:    
+                        seg += ch
+                case "\\":
+                    seg += instruction[i+1]
+                    i += 1 # Skips next char
                 case "#":
                     break
                 case _:
                     seg += ch
+            i += 1 # Next iteration
         if len(seg) > 0:
             segments.append(seg)
         # Prevents empty segments
