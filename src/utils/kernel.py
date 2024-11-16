@@ -19,7 +19,7 @@ class Kernel:
         self.__OPTIONS: SysOptions = options
         self.__conn:  sqlite3.Connection
         self.__root: int
-        print("Kernel connecting...")
+        print(Fore.BLACK, "Kernel connecting...", Fore.RESET)
         # Creating connection
         try:
             self.__conn = sqlite3.connect(self.__OPTIONS["dbdir"]) 
@@ -59,13 +59,13 @@ class Kernel:
                 raise SystemExit
         else:
             self.__root = self.__root[0] # Dicscards tuple
-        print("Kernel connected")
+        print(Fore.BLACK, "Kernel connected", Fore.RESET)
 
     def __del__(self) -> None:
-        print("Closing kernel connection...")
+        print(Fore.BLACK, "Closing kernel connection...", Fore.RESET)
         if hasattr(self, '__conn'):
             self.__conn.close()
-        print("Kernel connection closed")
+        print(Fore.BLACK, "Kernel connection closed", Fore.RESET)
 
     # Private
     # @returns {int} root node id

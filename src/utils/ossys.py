@@ -10,13 +10,14 @@ from .options import SysOptions, getDefaultOptions, loadOptions
 # System
 class System:
     def __init__(self) -> None:
+        print(Fore.BLACK, "Starting system...",Fore.RESET)
         # Loads options
         self._OPTIONS: SysOptions = getDefaultOptions()
         opts = loadOptions()
         if opts is None:
-            print("Due to missing custom options system loads default options")
+            print(Fore.YELLOW, "Due to missing custom options system loads default options", Fore.RESET)
         else:
-            print("Loading custom options")
+            print(Fore.BLACK, "Loading custom options", Fore.RESET)
             self._OPTIONS.update(opts)
         # Init subsystems
         self._TASKC: TaskController = TaskController()
@@ -30,12 +31,12 @@ class System:
             try:
                 result = task()
                 if result != 0 and result is not None:
-                    print(f"Task exited with code {result}")       
+                    print(Fore.BLACK, f"Task exited with code {result}", Fore.RESET)       
             except Exception as exc:
                 print(Fore.RED, "Unexpected error occurred", exc, Fore.RESET, sep="\n")
                 if self._OPTIONS["verbose"]:
                     print_exc()
                 return
-        print("Closing system...")
+        print(Fore.BLACK, "Closing system...", Fore.RESET)
 
 

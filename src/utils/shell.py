@@ -9,7 +9,7 @@ from .options import SysOptions
 class Shell:
     def __init__(self, kernel: Kernel, taskController: TaskController, options: SysOptions) -> None:
         # Init shell
-        print("Shell initialization...")
+        print(Fore.BLACK, "Shell initialization...", Fore.RESET)
         self.__SCRIPTS: dict = {}
         self.__TASKC: TaskController =  taskController
         self.__KERNEL: Kernel = kernel
@@ -27,9 +27,9 @@ class Shell:
             self.__currNode = nodeId
             self.__location = startlocation
         # Loads scripts
-        print("Loading shell scripts...")
+        print(Fore.BLACK, "Loading shell scripts...", Fore.RESET)
         self.__loadScripts()
-        print(f"Shell initialized\n\nWelcome {self.__OPTIONS['username']}!")
+        print(Fore.BLACK, f"Shell initialized{Fore.RESET}\n\nWelcome {self.__OPTIONS['username']}!")
 
     # Private
     def __loadScripts(self) -> None:
@@ -38,7 +38,7 @@ class Shell:
         try:
             binId = self.__KERNEL.get_node_path("/bin")
         except:
-            print("Could not find bin dir to load scripts")
+            print(Fore.RED, "Could not find bin dir to load scripts", Fore.RESET)
             return
         # (id: int, name: str, type: str)
         scripts = self.__KERNEL.list_directory(binId)
@@ -47,10 +47,10 @@ class Shell:
             try:
                 scrPath = self.__KERNEL.get_absolute_path(scr[0]) # <id>
             except:
-                print(f"Could not load script - `{scr[1]}`")
+                print(Fore.YELLOW, f"Could not load script - `{scr[1]}`", Fore.RESET)
                 continue
             self.__SCRIPTS[scr[1]] = scrPath # [<name>] = <path>
-            print(f"* Successfully loaded script `{scr[1]}`")
+            print(Fore.GREEN, f"* Successfully loaded script `{scr[1]}`", Fore.RESET)
 
     def __joinPath(self, destination: str) -> str:
         newDir: str = ""
@@ -93,9 +93,9 @@ class Shell:
                     try:
                         nodeId = self.__KERNEL.get_node_path("/etc/help.txt")
                     except MissingNodeException:
-                        print("Cannot find help message")
+                        print(Fore.RED, "Cannot find help message", Fore.RESET)
                         return 1
-                    print(self.__KERNEL.read_file(nodeId) or "HELP MISSING")
+                    print(self.__KERNEL.read_file(nodeId) or f"{Fore.RED}HELP MISSING{Fore.RESET}")
                     return 0
                 return fun
             case "clear":
