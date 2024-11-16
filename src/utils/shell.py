@@ -52,6 +52,9 @@ class Shell:
             self.__SCRIPTS[scr[1]] = scrPath # [<name>] = <path>
             print(Fore.GREEN, f"* Successfully loaded script `{scr[1]}`", Fore.RESET)
 
+    def __formatString(self, text: str) -> str:
+        return text.replace("\\n", "\n").replace("\\t", "\t")
+
     def __joinPath(self, destination: str) -> str:
         newDir: str = ""
         if len(destination) == 0 or destination == "~":
@@ -177,10 +180,10 @@ class Shell:
                 return fun
             case "echo":
                 def fun():
-                    print(' '.join(segments[1:]))
+                    print(self.__formatString(' '.join(segments[1:])))
                     return 0
                 return fun
-            case "mkdir":
+            case "mkdir" | "touch":
                 def fun():
                     if (len(segments) < 2):
                         print("Missing argument - path")
@@ -190,9 +193,12 @@ class Shell:
                     DIR = '/'.join(PATH[:-1]) 
                     try:
                         PARENT: int = self.__KERNEL.get_node_path(DIR)
-                        self.__KERNEL.create_directory(NAME, PARENT)
+                        if segments[0] == "mkdir":
+                            self.__KERNEL.create_directory(NAME, PARENT)
+                        elif segments[0] == "touch":
+                            self.__KERNEL.create_file(NAME, PARENT)
                     except (NodeNameConflictException, NodeTypeException, MissingNodeException):
-                        print(f"Could not create directory in that path - `{DIR}` `{NAME}`")
+                        print(f"Could not create node in that path - `{DIR}` `{NAME}`")
                         return 1
                     return 0
                 return fun
@@ -214,12 +220,34 @@ class Shell:
                         return 1
                     return 0
                 return fun
+            case "write" | "append":
+                def fun():
+                    if len(segments) < 2:
+                        print("Missing argument - path")
+                        return 1
+                    PATH = self.__joinPath(segments[1])
+                    contents: str = self.__formatString(' '.join(segments[2:]))
+                    nodeId: int
+                    try:
+                        nodeId = self.__KERNEL.get_node_path(PATH)
+                    except (NodeTypeException, MissingNodeException):
+                        print(f"Invalid path - {PATH}")
+                        return 1
+                    if not self.__KERNEL.is_file(nodeId):
+                        print(f"Not a file provided - {PATH}")
+                        return 1
+                    if segments[0] == "write":
+                        self.__KERNEL.write_to_file(nodeId, contents)
+                    elif segments[0] == "append":
+                        self.__KERNEL.append_to_file(nodeId, "\n" + contents)
+                    return 0
+                return fun
             case "exit":
                 def fun():
                     self.__TASKC.emptyTasks()
                     return 0
                 return fun
-            case "":
+            case "" | "#":
                 def fun():
                     return 0
                 return fun

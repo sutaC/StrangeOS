@@ -11,6 +11,7 @@ run [file path]         - runs contents of a files with shell
 echo (text ...)         - displays given text
 mkdir [path]            - creates directory in given path
 rm [path]               - removes given file or directory (also removes all directory children)
+touch [path]            - creates file in given path
 exit                    - exits os
 
 ## Tips

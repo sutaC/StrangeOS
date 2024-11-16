@@ -134,7 +134,7 @@ class Kernel:
         cursor.close()
         return id
     
-    def create_file(self, parent_id: int, name: str, contents: str = "", metadata: str = None) -> int:
+    def create_file(self, name: str, parent_id: int, contents: str = None, metadata: str = None) -> int:
         if not self.is_directory(parent_id):
             raise NodeTypeException("Tried to create children to not directory parent", parent_id, name)
         if self.is_node_in_directory(name, parent_id):
