@@ -15,7 +15,6 @@ class Shell:
         self.__KERNEL: Kernel = kernel
         self.__OPTIONS: SysOptions = options
         # Sets initial location
-        self.__currNode: int = self.__KERNEL.get_root()
         self.__location: str = "/"
         startlocation = self.__joinPath(self.__OPTIONS["startlocation"])
         nodeId: int = None
@@ -24,7 +23,6 @@ class Shell:
         except (NodeTypeException, MissingNodeException):
             print(Fore.RED, "Could not find starting directory, seting init location to default", Fore.RESET)
         if nodeId is not None:
-            self.__currNode = nodeId
             self.__location = startlocation
         # Loads scripts
         print(Fore.BLACK, "Loading shell scripts...", Fore.RESET)
@@ -69,6 +67,10 @@ class Shell:
         sdirs: list[str] = newDir.split("/")
         i: int = 0
         while 0 <= i < len(sdirs):
+            # Sets "" for whitespace dirs
+            if sdirs[i].find(" ") > -1:
+                sdirs[i] = "\"" + sdirs[i].removeprefix("\"").removesuffix("\"") + "\""
+            # Path action
             match sdirs[i]:
                 case "." | "":
                     sdirs.pop(i)
@@ -85,7 +87,38 @@ class Shell:
         return newDir
 
     def __interpretInstruction(self, instruction: str) -> FunctionType:
-        segments: list[str] = instruction.split(" ")
+        # Devides instruction to blocks
+        segments: list[str] = []
+        seg = ""
+        for ch in instruction.strip():
+            match ch:
+                case " ":
+                    if seg.startswith("\""):
+                        seg += " "
+                        continue
+                    if len(seg) > 0:
+                        segments.append(seg)
+                        seg = ""
+                case "\"":
+                    if seg.startswith("\""):
+                        if len(seg) > 1:
+                            segments.append(seg[1:])
+                        seg = ""
+                        continue
+                    seg += ch
+                case "#":
+                    break
+                case _:
+                    seg += ch
+        if len(seg) > 0:
+            segments.append(seg)
+        # Prevents empty segments
+        if len(segments) == 0:
+            segments.append("")
+        # Displays instruction segments for verbose
+        if self.__OPTIONS['verbose']: 
+            print(Fore.BLACK, "| Segments:", segments, "|", Fore.RESET)
+        # Matches instruction
         match segments[0]:
             case "help":
                 def fun():
@@ -128,6 +161,8 @@ class Shell:
                     out: str = ""
                     for item in display:
                         name = item[1]
+                        if name.find(" ") > -1:
+                            name = "\"" + name + "\""
                         if item[2] == "directory":
                             name = Fore.BLUE + name
                         elif item[2] == "file":
@@ -142,13 +177,15 @@ class Shell:
                     if len(segments) > 1:
                         destination = segments[1]
                     newDir: str = self.__joinPath(destination)
-                    newNode: int
+                    nodeId: int
                     try:
-                        newNode = self.__KERNEL.get_node_path(newDir)
+                        nodeId = self.__KERNEL.get_node_path(newDir)
                     except (MissingNodeException, NodeTypeException):
-                        print(f"Invalid path was provided - {destination}")
+                        print(f"Invalid path was provided - {newDir}")
                         return 1
-                    self.__currNode = newNode
+                    if not self.__KERNEL.is_directory(nodeId):
+                        print(f"Cannot enter not a directory - {newDir}")
+                        return 1
                     self.__location = newDir
                     return 0
                 return fun
@@ -180,7 +217,8 @@ class Shell:
                 return fun
             case "echo":
                 def fun():
-                    print(self.__formatString(' '.join(segments[1:])))
+                    if len(segments) > 1:
+                        print(self.__formatString(segments[1]))
                     return 0
                 return fun
             case "mkdir" | "touch":
@@ -226,7 +264,9 @@ class Shell:
                         print("Missing argument - path")
                         return 1
                     PATH = self.__joinPath(segments[1])
-                    contents: str = self.__formatString(' '.join(segments[2:]))
+                    contents: str = None
+                    if len(segments) > 2:
+                        contents = self.__formatString(segments[2])
                     nodeId: int
                     try:
                         nodeId = self.__KERNEL.get_node_path(PATH)
@@ -247,7 +287,7 @@ class Shell:
                     self.__TASKC.emptyTasks()
                     return 0
                 return fun
-            case "" | "#":
+            case "":
                 def fun():
                     return 0
                 return fun
@@ -282,8 +322,7 @@ class Shell:
             print(f"Not a file was provided - {path}")
             return 1
         file: str = self.__KERNEL.read_file(nodeId) or ""
-        for line in file.split("\n"):
-            line = line.strip()
+        for line in file.splitlines():
             if len(line) == 0:
                 continue
             code = self.__interpretInstruction(line)()
@@ -295,7 +334,7 @@ class Shell:
         instruction: str = None
         while instruction is None:
             try:
-                instruction = input(self.__getStyledInput()).strip()
+                instruction = input(self.__getStyledInput())
             except KeyboardInterrupt:
                 print("\nTo exit os type `exit`")
         self.__TASKC.addTask(self.__interpretInstruction(instruction))

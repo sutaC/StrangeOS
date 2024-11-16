@@ -3,5 +3,6 @@
     "sysname": "system",
     "dbdir": "filesystem.db",
     "startlocation": "/home/",
-    "verbose": true
+    "verbose": true,
+    "segments": true
 }

@@ -262,6 +262,7 @@ class Kernel:
         curr: int = self.__root
         segments: list[str] = path.split("/")
         for seg in segments:
+            seg = seg.removeprefix("\"").removesuffix("\"") # Removes "" for whitaspace names
             if not self.is_directory(curr):
                 raise NodeTypeException("Wrong path, not directories cannot have children", path, seg)
             match seg:
