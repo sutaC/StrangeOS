@@ -2,7 +2,7 @@ import os
 from types import FunctionType
 from colorama import Fore, Style
 from .taskcontroller import TaskController
-from .kernel import Kernel, MissingNodeException, NodeTypeException
+from .kernel import Kernel, MissingNodeException, NodeNameConflictException, NodeTypeException
 from .options import SysOptions
 
 # Shell lib
@@ -110,9 +110,21 @@ class Shell:
                 return fun
             case "ls":
                 def fun():
-                    # TODO: Add path arg
+                    path = "."
+                    if(len(segments) > 1):
+                        path = segments[1]
+                    path = self.__joinPath(path)
+                    nodeId: int
+                    try:
+                        nodeId = self.__KERNEL.get_node_path(path)
+                    except (NodeTypeException, MissingNodeException):
+                        print(f"Could not resolve given path = `{path}`")
+                        return 1
+                    if not self.__KERNEL.is_directory(nodeId):
+                        print(f"Not directories cannot have children - {path}")
+                        return 1
                     # (id: int, name: str, type: str)
-                    display: list[tuple[int, str, str]] = self.__KERNEL.list_directory(self.__currNode)
+                    display: list[tuple[int, str, str]] = self.__KERNEL.list_directory(nodeId)
                     out: str = ""
                     for item in display:
                         name = item[1]
@@ -169,6 +181,22 @@ class Shell:
             case "echo":
                 def fun():
                     print(' '.join(segments[1:]))
+                    return 0
+                return fun
+            case "mkdir":
+                def fun():
+                    if (len(segments) < 2):
+                        print("Missing argument - path")
+                        return 1
+                    PATH = self.__joinPath(segments[1]).split("/")
+                    NAME = PATH[-2] # Name
+                    DIR = '/'.join(PATH[:-2]) 
+                    try:
+                        PARENT: int = self.__KERNEL.get_node_path(DIR)
+                        self.__KERNEL.create_directory(NAME, PARENT)
+                    except (NodeNameConflictException, NodeTypeException, MissingNodeException):
+                        print(f"Could not create directory in that path - `{DIR}` `{NAME}`")
+                        return 1
                     return 0
                 return fun
             case "exit":

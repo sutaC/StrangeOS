@@ -4,13 +4,17 @@
 help                    - displays this message
 clear                   - clears console
 pwd                     - displays current directory
-ls                      - displays all files and subdirectories in current locations
-cd [directory]          - changes current directory ("~" refers to your home directory)
+ls (directory)          - displays all files and subdirectories in given location (default is current location)
+cd (directory)          - changes current directory
 cat [file path]         - displays contents of a files
 run [file path]         - runs contents of a files with shell
-echo [text ...]         - displays given text
+echo (text ...)         - displays given text
+mkdir [path]            - creates directory in given path
 exit                    - exits os
 
 ## Tips
+- Instruction args in () are optional and in [] are required
+- Instruction args containing ... may accept multiple separated values
 - Paths and directories cannot contain spaces
+- In paths "~" refers to home directory
 - You can add your own scripts to /bin/ directory!
