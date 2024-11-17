@@ -5,8 +5,6 @@ from traceback import print_exc
 from colorama import Fore
 from .options import SysOptions, getDefaultOptions, loadOptions 
 
-
-
 # System
 class System:
     def __init__(self) -> None:

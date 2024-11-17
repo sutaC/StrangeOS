@@ -17,7 +17,11 @@ Basic UNIX-like os build in python
 
 -   To clear filesystem data run [clear script](clear) or remove `filesystem.db`
 
-## Filesystem base structure:
+## Information about system
+
+Help with commands you will find in [help file](./src/data/helpmsg.txt) or by typing `help` in os itself.
+
+### Filesystem base structure:
 
 ```
 root
@@ -28,3 +32,29 @@ root
 |-- home
 |   `-- hello.txt
 ```
+
+### System options scheme:
+
+```
+{
+    # System name
+    sysname: str ("system")
+
+    # User name
+    username: str ("user")
+
+    # Directory to filesystem database
+    dbdir: str ("filesystem.db")
+
+    # Direction where user is after system starts
+    startlocation: str ("/")
+
+    # If true displays verbose error messages
+    verbose: bool (False)
+
+    # If true displays instruction segments
+    segments: bool (False)
+}
+```
+
+> &lt;option&gt;: &lt;type&gt; (&lt;default value&gt;)

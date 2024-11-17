@@ -25,7 +25,7 @@ def getDefaultOptions() -> SysOptions:
     opt['sysname'] = "system"
     opt['username'] = "user"
     opt['dbdir'] = "filesystem.db"
-    opt["startlocation"] = "/"
+    opt['startlocation'] = "/"
     opt['verbose'] = False
     opt['segments'] = False
     return opt
