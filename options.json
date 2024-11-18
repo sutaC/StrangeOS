@@ -4,5 +4,5 @@
     "dbdir": "filesystem.db",
     "startlocation": "/home/",
     "verbose": true,
-    "segments": true
+    "segments": false
 }

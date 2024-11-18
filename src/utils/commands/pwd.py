@@ -1,5 +1,3 @@
-from ..shell import Shell
-
-def main(shell: Shell, segments: list[str]) -> int:
-    print(shell.__location)
+def main(shell, segments: list[str]) -> int:
+    print(shell._location)
     return 0

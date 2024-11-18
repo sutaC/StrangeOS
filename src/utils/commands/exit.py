@@ -1,5 +1,3 @@
-from ..shell import Shell
-
-def main(shell: Shell, segments: list[str]) -> int:
-    shell.__TASKC.emptyTasks()
+def main(shell, segments: list[str]) -> int:
+    shell._TASKC.emptyTasks()
     return 0
