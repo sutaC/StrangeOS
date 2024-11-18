@@ -35,7 +35,9 @@ class Shell:
     # Private
     def __loadCommands(self) -> None:
         self.__COMMANDS.clear()
-        names: list[str] = os.listdir("src/utils/commands")
+        path: str = os.getcwd()
+        path = path[:path.rfind("/src") + 4] + "/utils/commands"
+        names: list[str] = os.listdir(path)
         for name in names:
             if not name.endswith(".py"):
                 continue
@@ -110,7 +112,7 @@ class Shell:
         if len(segments) == 0:
             segments.append("")
         # Displays instruction segments for verbose
-        if self.__OPTIONS['verbose']: 
+        if self.__OPTIONS['segments']: 
             print(Fore.BLACK, "| Segments:", segments, "|", Fore.RESET)
         # Matches instruction
         if segments[0] == "": # Empty
