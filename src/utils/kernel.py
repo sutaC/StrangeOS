@@ -201,13 +201,15 @@ class Kernel:
         self.__conn.commit()
         cursor.close()
 
-    def move_node(self, id: int, parent_id: int):
+    def move_node(self, id: int, parent_id: int, name: str | None = None):
         if self.is_root_directory(int):
             raise SystemNodeException("Cannot move root directory", id)
         if not self.is_directory(parent_id): 
             raise NodeTypeException("Tried to move node to not directory parent", id, parent_id)
         cursor = self.__conn.cursor()
         cursor.execute("UPDATE nodes SET parent_id = ? WHERE id = ?", [parent_id, id])
+        if name is not None:
+            cursor.execute("UPDATE nodes SET name = ? WHERE id = ?", [name, id])
         self.__conn.commit()
         cursor.close()
 

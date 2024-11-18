@@ -85,6 +85,12 @@ class Shell:
         if len(sdirs) > 0:
             newDir = "/" + newDir
         return newDir
+    
+    def __pathGetDir(self, path: str) -> str:
+        return self.__joinPath(path[:path.rfind("/") + 1])
+
+    def __pathGetBasename(self, path: str) -> str:
+        return path[path.rfind("/") + 1:]
 
     def __interpretInstruction(self, instruction: str) -> FunctionType:
         # Devides instruction to blocks
@@ -286,6 +292,47 @@ class Shell:
                         self.__KERNEL.write_to_file(nodeId, contents)
                     elif segments[0] == "append":
                         self.__KERNEL.append_to_file(nodeId, "\n" + contents)
+                    return 0
+                return fun
+            case "mv":
+                def fun():
+                    if len(segments) < 3:
+                        print("Missing arguments")
+                        return 1
+                    startPath: str = self.__joinPath(segments[1])
+                    if self.__location.startswith(startPath):
+                        print(f"Cannot move bussy node - {startPath}")
+                        return 1
+                    endPath: str = self.__joinPath(segments[2])
+                    if self.__location.startswith(endPath):
+                        print(f"Invalid path - {endPath}")
+                        return 1
+                    print(endPath)
+                    nodeId: int
+                    try:
+                        nodeId = self.__KERNEL.get_node_path(startPath)
+                    except (MissingNodeException, NodeTypeException):
+                        print(f"Invalid node path - {startPath}")
+                        return 1
+                    newParentId: int
+                    newName: str =  self.__pathGetBasename(endPath)
+                    if len(newName) == 0:
+                        print("Name cannot be empty")
+                        return 1
+                    try:
+                        newParentId = self.__KERNEL.get_node_path(self.__pathGetDir(endPath))
+                        if not self.__KERNEL.is_directory(newParentId):
+                            raise MissingNodeException
+                        if self.__KERNEL.is_node_in_directory(newName, newParentId):
+                            raise NodeTypeException
+                    except (MissingNodeException, NodeTypeException):
+                        print(f"Invalid path - {endPath}")
+                        return 1
+                    try:
+                        self.__KERNEL.move_node(nodeId, newParentId, newName)
+                    except:
+                        print("Cannot move node")
+                        return 1
                     return 0
                 return fun
             case "exit":
