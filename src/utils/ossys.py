@@ -1,6 +1,7 @@
 from .shell import Shell
 from .kernel import Kernel
 from .taskcontroller import TaskController
+from .io import IO
 from traceback import print_exc
 from colorama import Fore
 from .options import SysOptions, getDefaultOptions, loadOptions 
@@ -8,15 +9,14 @@ from .options import SysOptions, getDefaultOptions, loadOptions
 # System
 class System:
     def __init__(self) -> None:
-        print(Fore.BLACK, "Starting system...",Fore.RESET)
+        IO.write("Starting system...", style="dim")
         # Loads options
         self._OPTIONS: SysOptions = getDefaultOptions()
         opts = loadOptions()
         if opts is None:
-            print(Fore.YELLOW, "Due to missing custom options system loads default options", Fore.RESET)
+            IO.write("Due to missing custom options system loads default options", style="warning")
         else:
-            if self._OPTIONS["verbose"]:
-                print(Fore.BLACK, "Loading custom options...", Fore.RESET)
+            IO.write("Loading options...", style="dim")
             self._OPTIONS.update(opts)
         # Init subsystems
         self._TASKC: TaskController = TaskController()
@@ -30,13 +30,13 @@ class System:
             try:
                 result = task()
                 if result != 0 and result is not None:
-                    print(Fore.BLACK, f"Task exited with code {result}", Fore.RESET)       
+                    IO.write(f"Task exited with code {result}", style="dim")       
             except Exception as exc:
-                print(Fore.RED, "Unexpected error occurred", exc, Fore.RESET, sep="\n")
+                print(f"\nUnexpected error occurred\n{exc}\n", style="error")
                 if self._OPTIONS["verbose"]:
                     print_exc()
-                    print() # Whitespace
+                    IO.write() # Whitespace
                 return
-        print(Fore.BLACK, "Closing system...", Fore.RESET)
+        IO.write("Closing system...", style="dim")
 
 

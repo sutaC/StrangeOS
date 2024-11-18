@@ -1,8 +1,9 @@
+from utils.io import IO
 from utils.kernel import MissingNodeException, NodeNameConflictException, NodeTypeException
 
 def main(shell, segments: list[str]) -> int:
     if (len(segments) < 2):
-        print("Missing argument - path")
+        IO.write("Missing argument - path")
         return 1
     PATH = shell._joinPath(segments[1])
     NAME = shell._pathGetBasename(PATH)
@@ -11,6 +12,6 @@ def main(shell, segments: list[str]) -> int:
         PARENT: int = shell._KERNEL.get_node_path(DIR)
         shell._KERNEL.create_directory(NAME, PARENT)
     except (NodeNameConflictException, NodeTypeException, MissingNodeException):
-        print(f"Could not create node in that path - `{DIR}` `{NAME}`")
+        IO.write(f"Could not create node in that path - `{DIR}` `{NAME}`")
         return 1
     return 0

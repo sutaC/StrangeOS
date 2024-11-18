@@ -2,6 +2,7 @@ import sqlite3
 import os
 from traceback import print_exc
 from colorama import Fore
+from .io import IO
 from .options import SysOptions
 
 class MissingNodeException(Exception):
@@ -20,15 +21,15 @@ class Kernel:
         self.__OPTIONS: SysOptions = options
         self.__conn:  sqlite3.Connection
         self.__root: int
-        print(Fore.BLACK, "Kernel connecting...", Fore.RESET)
+        IO.write("Kernel connecting...", style="dim")
         # Creating connection
         try:
             self.__conn = sqlite3.connect(self.__OPTIONS["dbdir"]) 
         except:
-            print(Fore.RED, f"Cannot access database file at given directory - `{self.__OPTIONS['dbdir']}`", Fore.RESET, sep="\n")
+            IO.write(f"\nCannot access database file at given directory - `{self.__OPTIONS['dbdir']}`\n", style="error")
             if self.__OPTIONS['verbose']:
                 print_exc() 
-                print() # Whitespace
+                IO.write() # Whitespace
             raise SystemExit
         # Inits database
         cursor = self.__conn.cursor()
@@ -59,20 +60,20 @@ class Kernel:
             try:
                 self.__root = self.__initFilesystem()
             except Exception as exc:
-                print(Fore.RED, "Kernel error - cannot initiate filesystem", exc, "Filesystem might be corrupted and not functionate correctly, try to clear filesystem and try again", Fore.RESET, sep="\n")
+                IO.write(f"\nKernel error - cannot initiate filesystem\n{exc}\nFilesystem might be corrupted and not functionate correctly, try to clear filesystem and try again\n", style="error")
                 if self.__OPTIONS['verbose']:
                     print_exc() 
-                    print() # Whitespace
+                    IO.write() # Whitespace
                 raise SystemExit
         else:
             self.__root = self.__root[0] # Dicscards tuple
-        print(Fore.BLACK, "Kernel connected", Fore.RESET)
+        IO.write("Kernel connected", style="dim")
 
     def __del__(self) -> None:
-        print(Fore.BLACK, "Closing kernel connection...", Fore.RESET)
+        IO.write("Closing kernel connection...", style="dim")
         if hasattr(self, '__conn'):
             self.__conn.close()
-        print(Fore.BLACK, "Kernel connection closed", Fore.RESET)
+        IO.write("Kernel connection closed", style="dim")
 
     # Private
     # @returns {int} root node id

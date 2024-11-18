@@ -1,3 +1,4 @@
+from utils.io import IO
 from utils.kernel import MissingNodeException, NodeTypeException
 
 def main(shell, segments: list[str]) -> int:
@@ -9,10 +10,10 @@ def main(shell, segments: list[str]) -> int:
     try:
         nodeId = shell._KERNEL.get_node_path(newDir)
     except (MissingNodeException, NodeTypeException):
-        print(f"Invalid path was provided - {newDir}")
+        IO.write(f"Invalid path was provided - {newDir}")
         return 1
     if not shell._KERNEL.is_directory(nodeId):
-        print(f"Cannot enter not a directory - {newDir}")
+        IO.write(f"Cannot enter not a directory - {newDir}")
         return 1
     shell._location = newDir
     return 0

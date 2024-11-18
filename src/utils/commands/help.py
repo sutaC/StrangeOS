@@ -1,3 +1,4 @@
+from utils.io import IO
 from utils.kernel import MissingNodeException
 from colorama import Fore
 
@@ -6,7 +7,7 @@ def main(shell, segments: list[str]) -> int:
     try:
         nodeId = shell._KERNEL.get_node_path("/etc/help.txt")
     except MissingNodeException:
-        print(Fore.RED, "Cannot find help message", Fore.RESET)
+        IO.write("Cannot find help message", style="error")
         return 1
-    print(shell._KERNEL.read_file(nodeId) or f"{Fore.RED}HELP MISSING{Fore.RESET}")
+    IO.write(shell._KERNEL.read_file(nodeId) or "HELP MISSING")
     return 0

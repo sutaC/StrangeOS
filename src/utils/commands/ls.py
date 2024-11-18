@@ -1,3 +1,4 @@
+from utils.io import IO
 from utils.kernel import MissingNodeException, NodeTypeException
 from colorama import Fore
 
@@ -10,10 +11,10 @@ def main(shell, segments: list[str]) -> int:
     try:
         nodeId = shell._KERNEL.get_node_path(path)
     except (NodeTypeException, MissingNodeException):
-        print(f"Could not resolve given path = `{path}`")
+        IO.write(f"Could not resolve given path = `{path}`")
         return 1
     if not shell._KERNEL.is_directory(nodeId):
-        print(f"Not directories cannot have children - {path}")
+        IO.write(f"Not directories cannot have children - {path}")
         return 1
     # (id: int, name: str, type: str)
     display: list[tuple[int, str, str]] = shell._KERNEL.list_directory(nodeId)
@@ -27,5 +28,5 @@ def main(shell, segments: list[str]) -> int:
         elif item[2] == "file":
             name = Fore.GREEN + name
         out += name + " "
-    print(out)
+    IO.write(out)
     return 0

@@ -1,8 +1,9 @@
+from utils.io import IO
 from utils.kernel import MissingNodeException, NodeTypeException
 
 def main(shell, segments: list[str]) -> int:
     if len(segments) < 2:
-        print("Missing argument - path")
+        IO.write("Missing argument - path")
         return 1
     PATH = shell._joinPath(segments[1])
     contents: str = None
@@ -12,10 +13,10 @@ def main(shell, segments: list[str]) -> int:
     try:
         nodeId = shell._KERNEL.get_node_path(PATH)
     except (NodeTypeException, MissingNodeException):
-        print(f"Invalid path - {PATH}")
+        IO.write(f"Invalid path - {PATH}")
         return 1
     if not shell._KERNEL.is_file(nodeId):
-        print(f"Not a file provided - {PATH}")
+        IO.write(f"Not a file provided - {PATH}")
         return 1
     shell._KERNEL.write_to_file(nodeId, contents)
     return 0

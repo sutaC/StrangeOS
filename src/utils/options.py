@@ -1,6 +1,8 @@
+from .io import IO
 from typing import TypedDict
 from json import load
 import os
+
 
 class SysOptions(TypedDict):
     sysname: str        # System name
@@ -13,7 +15,7 @@ class SysOptions(TypedDict):
 def loadOptions() -> SysOptions | None:
     DIR = os.path.join(os.getcwd(), "options.json")
     if not os.path.isfile(DIR):
-        print("Not found options.json")
+        IO.write("Not found options.json")
         return None
     data: SysOptions | None
     with open(DIR) as file:

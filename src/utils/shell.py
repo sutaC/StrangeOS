@@ -5,12 +5,13 @@ from colorama import Fore, Style
 from .taskcontroller import TaskController
 from .kernel import Kernel, MissingNodeException, NodeTypeException
 from .options import SysOptions
+from .io import IO
 
 # Shell lib
 class Shell:
     def __init__(self, kernel: Kernel, taskController: TaskController, options: SysOptions) -> None:
         # Init shell
-        print(Fore.BLACK, "Shell initialization...", Fore.RESET)
+        IO.write("Shell initialization...", style="dim")
         self.__SCRIPTS: dict = {}
         self.__COMMANDS: dict = {}
         self.__OPTIONS: SysOptions = options
@@ -23,21 +24,22 @@ class Shell:
         try:
             nodeId = kernel.get_node_path(startlocation)
         except (NodeTypeException, MissingNodeException):
-            print(Fore.RED, "Could not find starting directory, seting init location to default", Fore.RESET)
+            IO.write("Could not find starting directory, seting init location to default", style="error")
         if nodeId is not None:
             self._location = startlocation
-        print(Fore.BLACK, "Loading shell commands...", Fore.RESET)
+        IO.write("Loading shell commands...", sep="dim")
         self.__loadCommands()
-        print(Fore.BLACK, "Loading shell scripts...", Fore.RESET)
+        IO.write("Loading shell scripts...", sep="dim")
         self.__loadScripts()
-        print(Fore.BLACK, f"Shell initialized{Fore.RESET}\n\nWelcome {self.__OPTIONS['username']}!")
+        IO.write("Shell initialized", style="dim")
+        IO.write(f"Welcome {self.__OPTIONS['username']}!")
 
     # Private
     def __loadCommands(self) -> None:
         self.__COMMANDS.clear()
-        path: str = os.getcwd()
-        path = path[:path.rfind("/src") + 4] + "/utils/commands"
+        path: str = os.path.dirname(__file__) + "/commands"
         names: list[str] = os.listdir(path)
+        print(path)
         for name in names:
             if not name.endswith(".py"):
                 continue
@@ -49,11 +51,11 @@ class Shell:
                     raise Exception("Missing main function")
                 command: FunctionType = module.main
             except Exception as exc:
-                print(Fore.RED, f"* Could not load system command - `{name}`", Fore.RESET)
+                IO.write(f"* Could not load system command - `{name}`", style="warning")
                 if self.__OPTIONS['verbose']:
-                    print(repr(exc))
+                    IO.write(repr(exc))
                 continue
-            print(Fore.GREEN, f"* Successfully loaded system command `{name}`", Fore.RESET)
+            IO.write(f"* Successfully loaded system command `{name}`", style="success")
             self.__COMMANDS[name] = command
 
     def __loadScripts(self) -> None:
@@ -62,7 +64,7 @@ class Shell:
         try:
             binId = self._KERNEL.get_node_path("/bin")
         except:
-            print(Fore.RED, "Could not find bin dir to load scripts", Fore.RESET)
+            IO.write("Could not find bin dir to load scripts", style="error")
             return
         # (id: int, name: str, type: str)
         scripts = self._KERNEL.list_directory(binId)
@@ -71,10 +73,10 @@ class Shell:
             try:
                 scrPath = self._KERNEL.get_absolute_path(scr[0]) # <id>
             except:
-                print(Fore.YELLOW, f"Could not load script - `{scr[1]}`", Fore.RESET)
+                IO.write(f"Could not load script - `{scr[1]}`", style="warning")
                 continue
             self.__SCRIPTS[scr[1]] = scrPath # [<name>] = <path>
-            print(Fore.GREEN, f"* Successfully loaded script `{scr[1]}`", Fore.RESET)
+            IO.write(f"* Successfully loaded script `{scr[1]}`", style="success")
 
     def __interpretInstruction(self, instruction: str) -> FunctionType:
         # Devides instruction to blocks
@@ -113,7 +115,7 @@ class Shell:
             segments.append("")
         # Displays instruction segments for verbose
         if self.__OPTIONS['segments']: 
-            print(Fore.BLACK, "| Segments:", segments, "|", Fore.RESET)
+            IO.write(f"| Segments: {segments} |", style="dim")
         # Matches instruction
         if segments[0] == "": # Empty
             def command():
@@ -129,7 +131,7 @@ class Shell:
             return fun
         # Invalid instruction
         def command():
-            print(f"Invalid instruction provided - `{instruction}`")
+            IO.write(f"Invalid instruction provided - `{instruction}`")
             return 1
         return command
 
@@ -189,10 +191,10 @@ class Shell:
         try:
             nodeId = self._KERNEL.get_node_path(path)
         except (NodeTypeException, MissingNodeException):
-            print(f"Node was not found - {path}")
+            IO.write(f"Node was not found - {path}")
             return 1
         if not self._KERNEL.is_file(nodeId):
-            print(f"Not a file was provided - {path}")
+            IO.write(f"Not a file was provided - {path}")
             return 1
         file: str = self._KERNEL.read_file(nodeId) or ""
         for line in file.splitlines():
@@ -209,6 +211,6 @@ class Shell:
             try:
                 instruction = input(self.__getStyledInput())
             except KeyboardInterrupt:
-                print("\nTo exit os type `exit`")
+                IO.write("\nTo exit os type `exit`")
         self._TASKC.addTask(self.__interpretInstruction(instruction))
         self._TASKC.addTask(self.runInteractive)

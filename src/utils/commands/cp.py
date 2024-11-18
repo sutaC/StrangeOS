@@ -1,8 +1,9 @@
+from utils.io import IO
 from utils.kernel import MissingNodeException, NodeTypeException
 
 def main(shell, segments: list[str]) -> int:
     if len(segments) < 3:
-        print("Missing arguments")
+        IO.write("Missing arguments")
         return 1
     startPath: str = shell._joinPath(segments[1])
     endPath: str = shell._joinPath(segments[2])
@@ -14,12 +15,12 @@ def main(shell, segments: list[str]) -> int:
         nodeId = shell._KERNEL.get_node_path(startPath)
         node = shell._KERNEL.get_node(nodeId)
     except (MissingNodeException, NodeTypeException):
-        print(f"Invalid node path - {startPath}")
+        IO.write(f"Invalid node path - {startPath}")
         return 1
     parentId: int
     name: str =  shell._pathGetBasename(endPath)
     if len(name) == 0:
-        print("Name cannot be empty")
+        IO.write("Name cannot be empty")
         return 1
     try:
         parentId = shell._KERNEL.get_node_path(shell._pathGetDir(endPath))
@@ -28,7 +29,7 @@ def main(shell, segments: list[str]) -> int:
         if shell._KERNEL.is_node_in_directory(name, parentId):
             raise NodeTypeException
     except (MissingNodeException, NodeTypeException):
-        print(f"Invalid path - {endPath}")
+        IO.write(f"Invalid path - {endPath}")
         return 1
     try:
         if node[1] == "file":
@@ -38,6 +39,6 @@ def main(shell, segments: list[str]) -> int:
         elif node[1] == "directory":
             shell._KERNEL.create_directory(name, parentId)
     except:
-        print("Cannot copy node")
+        IO.write("Cannot copy node")
         return 1
     return 0
