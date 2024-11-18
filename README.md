@@ -35,13 +35,15 @@ root
 
 ### System options scheme:
 
+Options must be saved in `options.json` file in root project directory. [Options template](options.template.json) provides default options for you to change
+
 ```
 {
-    # System name
-    sysname: str ("system")
-
     # User name
     username: str ("user")
+
+    # System name
+    sysname: str ("system")
 
     # Directory to filesystem database
     dbdir: str ("filesystem.db")

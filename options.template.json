@@ -2,7 +2,7 @@
     "username": "user",
     "sysname": "system",
     "dbdir": "filesystem.db",
-    "startlocation": "/home/",
-    "verbose": true,
+    "startlocation": "/",
+    "verbose": false,
     "segments": false
 }
