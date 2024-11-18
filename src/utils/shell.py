@@ -27,12 +27,12 @@ class Shell:
             IO.write("Could not find starting directory, seting init location to default", style="error")
         if nodeId is not None:
             self._location = startlocation
-        IO.write("Loading shell commands...", sep="dim")
+        IO.write("Loading shell commands...", style="dim")
         self.__loadCommands()
-        IO.write("Loading shell scripts...", sep="dim")
+        IO.write("Loading shell scripts...", style="dim")
         self.__loadScripts()
         IO.write("Shell initialized", style="dim")
-        IO.write(f"Welcome {self.__OPTIONS['username']}!")
+        IO.write(f"\nWelcome {self.__OPTIONS['username']}!")
 
     # Private
     def __loadCommands(self) -> None:
