@@ -15,6 +15,7 @@ touch [path]                - creates file in given path
 write [path] (conents)      - writes given contents to file in given path
 append [path] (conents)     - appends given contents to file in given path
 mv [start path] [new path]  - moves node to given path
+mv [start path] [new path]  - copies node to given path
 exit                        - exits os
 
 ## Tips

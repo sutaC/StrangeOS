@@ -238,9 +238,9 @@ class Shell:
                     if (len(segments) < 2):
                         print("Missing argument - path")
                         return 1
-                    PATH = self.__joinPath(segments[1]).split("/")
-                    NAME = PATH[-1] # Name
-                    DIR = '/'.join(PATH[:-1]) 
+                    PATH = self.__joinPath(segments[1])
+                    NAME = self.__pathGetBasename(PATH)
+                    DIR = self.__pathGetDir(PATH)
                     try:
                         PARENT: int = self.__KERNEL.get_node_path(DIR)
                         if segments[0] == "mkdir":
@@ -307,7 +307,6 @@ class Shell:
                     if self.__location.startswith(endPath):
                         print(f"Invalid path - {endPath}")
                         return 1
-                    print(endPath)
                     nodeId: int
                     try:
                         nodeId = self.__KERNEL.get_node_path(startPath)
@@ -332,6 +331,49 @@ class Shell:
                         self.__KERNEL.move_node(nodeId, newParentId, newName)
                     except:
                         print("Cannot move node")
+                        return 1
+                    return 0
+                return fun
+            case "cp":
+                def fun():
+                    if len(segments) < 3:
+                        print("Missing arguments")
+                        return 1
+                    startPath: str = self.__joinPath(segments[1])
+                    endPath: str = self.__joinPath(segments[2])
+                    # Copy from node
+                    nodeId: int
+                    # (name: str, type: str, parent_id: int)
+                    node: tuple[str, str, int]
+                    try:
+                        nodeId = self.__KERNEL.get_node_path(startPath)
+                        node = self.__KERNEL.get_node(nodeId)
+                    except (MissingNodeException, NodeTypeException):
+                        print(f"Invalid node path - {startPath}")
+                        return 1
+                    parentId: int
+                    name: str =  self.__pathGetBasename(endPath)
+                    if len(name) == 0:
+                        print("Name cannot be empty")
+                        return 1
+                    try:
+                        parentId = self.__KERNEL.get_node_path(self.__pathGetDir(endPath))
+                        if not self.__KERNEL.is_directory(parentId):
+                            raise MissingNodeException
+                        if self.__KERNEL.is_node_in_directory(name, parentId):
+                            raise NodeTypeException
+                    except (MissingNodeException, NodeTypeException):
+                        print(f"Invalid path - {endPath}")
+                        return 1
+                    try:
+                        if node[1] == "file":
+                            contents = self.__KERNEL.read_file(nodeId)
+                            metadata = self.__KERNEL.get_file_metadata(nodeId)
+                            self.__KERNEL.create_file(name, parentId, contents, metadata)
+                        elif node[1] == "directory":
+                            self.__KERNEL.create_directory(name, parentId)
+                    except:
+                        print("Cannot copy node")
                         return 1
                     return 0
                 return fun
