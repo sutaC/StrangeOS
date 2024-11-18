@@ -1,6 +1,5 @@
 from utils.io import IO
 from utils.kernel import MissingNodeException
-from colorama import Fore
 
 def main(shell, segments: list[str]) -> int:
     nodeId: int

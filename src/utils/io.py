@@ -2,7 +2,7 @@ from colorama import Style, Fore
 
 class IO:
     @staticmethod
-    def write(*txt, sep: str | None = " ", end: str | None = "\n", style: str | None = ""):
+    def write(*txt, sep: str | None = " ", end: str | None = "\n", style: str | None = "") -> None:
         msg: str = ' '.join(txt)
         match style:
             case "success":
@@ -15,3 +15,13 @@ class IO:
                 msg = Fore.BLACK +  msg + Fore.RESET
                 msg = Style.DIM +  msg + Style.RESET_ALL
         print(msg, sep=sep, end=end)
+
+    @staticmethod
+    def read(prompt: str = "") -> str:
+        result: str = None
+        while result is None:
+            try:
+                result = input(prompt)
+            except KeyboardInterrupt:
+                IO.write("\nTo exit os type `exit`")
+        return result

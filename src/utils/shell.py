@@ -39,7 +39,6 @@ class Shell:
         self.__COMMANDS.clear()
         path: str = os.path.dirname(__file__) + "/commands"
         names: list[str] = os.listdir(path)
-        print(path)
         for name in names:
             if not name.endswith(".py"):
                 continue
@@ -206,11 +205,6 @@ class Shell:
         return 0
 
     def runInteractive(self) -> None:
-        instruction: str = None
-        while instruction is None:
-            try:
-                instruction = input(self.__getStyledInput())
-            except KeyboardInterrupt:
-                IO.write("\nTo exit os type `exit`")
+        instruction: str = IO.read(self.__getStyledInput())
         self._TASKC.addTask(self.__interpretInstruction(instruction))
         self._TASKC.addTask(self.runInteractive)
