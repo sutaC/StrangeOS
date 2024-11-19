@@ -6,7 +6,7 @@ def main(shell, segments: list[str]) -> int:
     try:
         nodeId = shell._KERNEL.get_node_path("/etc/help.txt")
     except MissingNodeException:
-        IO.write("Cannot find help message", style="error")
+        IO.write("Cannot find help message", style=IO.Styles.error)
         return 1
     IO.write(shell._KERNEL.read_file(nodeId) or "HELP MISSING")
     return 0

@@ -11,7 +11,7 @@ from .io import IO
 class Shell:
     def __init__(self, kernel: Kernel, taskController: TaskController, options: SysOptions) -> None:
         # Init shell
-        IO.write("Shell initialization...", style="dim")
+        IO.write("Shell initialization...", style=IO.Styles.dim)
         self.__SCRIPTS: dict = {}
         self.__COMMANDS: dict = {}
         self.__OPTIONS: SysOptions = options
@@ -24,14 +24,14 @@ class Shell:
         try:
             nodeId = kernel.get_node_path(startlocation)
         except (NodeTypeException, MissingNodeException):
-            IO.write("Could not find starting directory, seting init location to default", style="error")
+            IO.write("Could not find starting directory, seting init location to default", style=IO.Styles.warning)
         if nodeId is not None:
             self._location = startlocation
-        IO.write("Loading shell commands...", style="dim")
+        IO.write("Loading shell commands...", style=IO.Styles.dim)
         self.__loadCommands()
-        IO.write("Loading shell scripts...", style="dim")
+        IO.write("Loading shell scripts...", style=IO.Styles.dim)
         self.__loadScripts()
-        IO.write("Shell initialized", style="dim")
+        IO.write("Shell initialized", style=IO.Styles.dim)
         IO.write(f"\nWelcome {self.__OPTIONS['username']}!")
 
     # Private
@@ -50,11 +50,11 @@ class Shell:
                     raise Exception("Missing main function")
                 command: FunctionType = module.main
             except Exception as exc:
-                IO.write(f"* Could not load system command - `{name}`", style="warning")
+                IO.write(f"* Could not load system command - `{name}`", style=IO.Styles.warning)
                 if self.__OPTIONS['verbose']:
                     IO.write(repr(exc))
                 continue
-            IO.write(f"* Successfully loaded system command `{name}`", style="success")
+            IO.write(f"* Successfully loaded system command `{name}`", style=IO.Styles.success)
             self.__COMMANDS[name] = command
 
     def __loadScripts(self) -> None:
@@ -63,7 +63,7 @@ class Shell:
         try:
             binId = self._KERNEL.get_node_path("/bin")
         except:
-            IO.write("Could not find bin dir to load scripts", style="error")
+            IO.write("Could not find bin dir to load scripts", style=IO.Styles.error)
             return
         # (id: int, name: str, type: str)
         scripts = self._KERNEL.list_directory(binId)
@@ -72,10 +72,10 @@ class Shell:
             try:
                 scrPath = self._KERNEL.get_absolute_path(scr[0]) # <id>
             except:
-                IO.write(f"Could not load script - `{scr[1]}`", style="warning")
+                IO.write(f"Could not load script - `{scr[1]}`", style=IO.Styles.warning)
                 continue
             self.__SCRIPTS[scr[1]] = scrPath # [<name>] = <path>
-            IO.write(f"* Successfully loaded script `{scr[1]}`", style="success")
+            IO.write(f"* Successfully loaded script `{scr[1]}`", style=IO.Styles.success)
 
     def __interpretInstruction(self, instruction: str) -> FunctionType:
         # Devides instruction to blocks
@@ -114,7 +114,7 @@ class Shell:
             segments.append("")
         # Displays instruction segments for verbose
         if self.__OPTIONS['segments']: 
-            IO.write(f"| Segments: {segments} |", style="dim")
+            IO.write(f"| Segments: {segments} |", style=IO.Styles.dim)
         # Matches instruction
         if segments[0] == "": # Empty
             def command():

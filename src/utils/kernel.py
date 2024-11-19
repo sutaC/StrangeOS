@@ -21,12 +21,12 @@ class Kernel:
         self.__OPTIONS: SysOptions = options
         self.__conn:  sqlite3.Connection
         self.__root: int
-        IO.write("Kernel connecting...", style="dim")
+        IO.write("Kernel connecting...", style=IO.Styles.dim)
         # Creating connection
         try:
             self.__conn = sqlite3.connect(self.__OPTIONS["dbdir"]) 
         except:
-            IO.write(f"\nCannot access database file at given directory - `{self.__OPTIONS['dbdir']}`\n", style="error")
+            IO.write(f"\nCannot access database file at given directory - `{self.__OPTIONS['dbdir']}`\n", style=IO.Styles.error)
             if self.__OPTIONS['verbose']:
                 print_exc() 
                 IO.write() # Whitespace
@@ -60,20 +60,20 @@ class Kernel:
             try:
                 self.__root = self.__initFilesystem()
             except Exception as exc:
-                IO.write(f"\nKernel error - cannot initiate filesystem\n{exc}\nFilesystem might be corrupted and not functionate correctly, try to clear filesystem and try again\n", style="error")
+                IO.write(f"\nKernel error - cannot initiate filesystem\n{exc}\nFilesystem might be corrupted and not functionate correctly, try to clear filesystem and try again\n", style=IO.Styles.error)
                 if self.__OPTIONS['verbose']:
                     print_exc() 
                     IO.write() # Whitespace
                 raise SystemExit
         else:
             self.__root = self.__root[0] # Dicscards tuple
-        IO.write("Kernel connected", style="dim")
+        IO.write("Kernel connected", style=IO.Styles.dim)
 
     def __del__(self) -> None:
-        IO.write("Closing kernel connection...", style="dim")
+        IO.write("Closing kernel connection...", style=IO.Styles.dim)
         if hasattr(self, '__conn'):
             self.__conn.close()
-        IO.write("Kernel connection closed", style="dim")
+        IO.write("Kernel connection closed", style=IO.Styles.dim)
 
     # Private
     # @returns {int} root node id
