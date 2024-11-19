@@ -22,6 +22,18 @@ class Kernel:
         self.__conn:  sqlite3.Connection
         self.__root: int
         IO.write("Kernel connecting...", style=IO.Styles.dim)
+        self.__initDatabase()
+        self.__initFilesystem()
+        IO.write("Kernel connected", style=IO.Styles.dim)
+
+    def __del__(self) -> None:
+        IO.write("Closing kernel connection...", style=IO.Styles.dim)
+        if hasattr(self, '__conn'):
+            self.__conn.close()
+        IO.write("Kernel connection closed", style=IO.Styles.dim)
+
+    # Private
+    def __initDatabase(self) -> None:
         # Creating connection
         try:
             self.__conn = sqlite3.connect(self.__OPTIONS["dbdir"]) 
@@ -52,55 +64,47 @@ class Kernel:
             )
         ''')
         self.__conn.commit() # Adds tables if empty
+        cursor.close()
+
+    # @returns {int} root node id
+    def __initFilesystem(self) -> int:
+        cursor = self.__conn.cursor()
+        # Gets root dir
         self.__root = cursor.execute('''
             SELECT id FROM nodes WHERE parent_id IS NULL
         ''').fetchone()
-        cursor.close()
-        if self.__root is None: # Adds root directory if doesn't exist
-            try:
-                self.__root = self.__initFilesystem()
-            except Exception as exc:
-                IO.write(f"\nKernel error - cannot initiate filesystem\n{exc}\nFilesystem might be corrupted and not functionate correctly, try to clear filesystem and try again\n", style=IO.Styles.error)
-                if self.__OPTIONS['verbose']:
-                    print_exc() 
-                    IO.write() # Whitespace
-                raise SystemExit
-        else:
+        if self.__root is not None:
             self.__root = self.__root[0] # Dicscards tuple
-        IO.write("Kernel connected", style=IO.Styles.dim)
-
-    def __del__(self) -> None:
-        IO.write("Closing kernel connection...", style=IO.Styles.dim)
-        if hasattr(self, '__conn'):
-            self.__conn.close()
-        IO.write("Kernel connection closed", style=IO.Styles.dim)
-
-    # Private
-    # @returns {int} root node id
-    def __initFilesystem(self) -> int:
-        # Clears system
-        self.prune_system()
-        # Creates root node
-        cursor = self.__conn.cursor()
-        cursor.execute("INSERT INTO nodes (id, name, parent_id, type) VALUES (NULL, 'root', NULL, 'directory')")
-        self.__conn.commit()  
+            return
+        else:
+            # Adds root directory if doesn't exist
+            cursor.execute("INSERT INTO nodes (id, name, parent_id, type) VALUES (NULL, 'root', NULL, 'directory')")
+            self.__conn.commit() 
+            self.__root: int = cursor.lastrowid
         cursor.close()
-        ROOT: int = cursor.lastrowid
-        # Add folders
-        HOME: int = self.create_directory("home", ROOT)
-        BIN: int = self.create_directory("bin", ROOT)
-        ETC: int = self.create_directory("etc", ROOT)
-        # Add files
-        os.chdir("src/data")
-        with open("helpmsg.txt") as file:
-            self.create_file("help.txt", ETC, file.read())
-        with open("greetmsg.txt") as file:
-            self.create_file("hello.txt", HOME, file.read())
-        with open("hi.scr") as file:
-            self.create_file("hi", BIN, file.read())
-        # Finish
-        return ROOT
-
+        # Creates file structure
+        try:
+            # Clears system
+            self.prune_system()
+            # Add folders
+            HOME: int = self.create_directory("home", self.__root)
+            BIN: int = self.create_directory("bin", self.__root)
+            ETC: int = self.create_directory("etc", self.__root)
+            # Add files
+            os.chdir("src/data")
+            with open("helpmsg.txt") as file:
+                self.create_file("help.txt", ETC, file.read())
+            with open("greetmsg.txt") as file:
+                self.create_file("hello.txt", HOME, file.read())
+            with open("hi.scr") as file:
+                self.create_file("hi", BIN, file.read())
+        except Exception as exc:
+            IO.write(f"\nKernel error - cannot initiate filesystem\n{exc}\nFilesystem might be corrupted and not functionate correctly, try to clear filesystem and try again\n", style=IO.Styles.error)
+            if self.__OPTIONS['verbose']:
+                print_exc() 
+                IO.write() # Whitespace
+            raise SystemExit
+            
     # Public
     def is_file(self, id: int) -> bool:
         cursor = self.__conn.cursor()
