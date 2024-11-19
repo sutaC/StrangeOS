@@ -3,7 +3,6 @@ from .kernel import Kernel
 from .taskcontroller import TaskController
 from .io import IO
 from traceback import print_exc
-from colorama import Fore
 from .options import SysOptions, getDefaultOptions, loadOptions 
 
 # System

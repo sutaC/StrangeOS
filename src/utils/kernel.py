@@ -1,7 +1,7 @@
 import sqlite3
 import os
+import bcrypt
 from traceback import print_exc
-from colorama import Fore
 from .io import IO
 from .options import SysOptions
 
@@ -22,8 +22,16 @@ class Kernel:
         self.__conn:  sqlite3.Connection
         self.__root: int
         IO.write("Kernel connecting...", style=IO.Styles.dim)
-        self.__initDatabase()
-        self.__initFilesystem()
+        try:
+            self.__initDatabase()
+            self.__initFilesystem()
+            self.__initUsers()
+        except Exception as exc:
+            IO.write(f"\nKernel error - cannot initiate system\n{exc}\System might be corrupted and not functionate correctly, try to clear filesystem and try again\n", style=IO.Styles.error)
+            if self.__OPTIONS['verbose']:
+                print_exc() 
+                IO.write() # Whitespace
+            raise SystemExit
         IO.write("Kernel connected", style=IO.Styles.dim)
 
     def __del__(self) -> None:
@@ -35,15 +43,7 @@ class Kernel:
     # Private
     def __initDatabase(self) -> None:
         # Creating connection
-        try:
-            self.__conn = sqlite3.connect(self.__OPTIONS["dbdir"]) 
-        except:
-            IO.write(f"\nCannot access database file at given directory - `{self.__OPTIONS['dbdir']}`\n", style=IO.Styles.error)
-            if self.__OPTIONS['verbose']:
-                print_exc() 
-                IO.write() # Whitespace
-            raise SystemExit
-        # Inits database
+        self.__conn = sqlite3.connect(self.__OPTIONS["dbdir"]) 
         cursor = self.__conn.cursor()
         # Creates tables
         cursor.execute('''
@@ -63,11 +63,18 @@ class Kernel:
                 FOREIGN KEY (node_id) REFERENCES nodes(id)
             )
         ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                login TEXT NOT NULL, 
+                password TEXT NOT NULL,
+                salt TEXT NOT NULL
+            )
+        ''')
         self.__conn.commit() # Adds tables if empty
         cursor.close()
 
-    # @returns {int} root node id
-    def __initFilesystem(self) -> int:
+    def __initFilesystem(self) -> None:
         cursor = self.__conn.cursor()
         # Gets root dir
         self.__root = cursor.execute('''
@@ -75,6 +82,7 @@ class Kernel:
         ''').fetchone()
         if self.__root is not None:
             self.__root = self.__root[0] # Dicscards tuple
+            cursor.close()
             return
         else:
             # Adds root directory if doesn't exist
@@ -83,27 +91,36 @@ class Kernel:
             self.__root: int = cursor.lastrowid
         cursor.close()
         # Creates file structure
-        try:
-            # Clears system
-            self.prune_system()
-            # Add folders
-            HOME: int = self.create_directory("home", self.__root)
-            BIN: int = self.create_directory("bin", self.__root)
-            ETC: int = self.create_directory("etc", self.__root)
-            # Add files
-            os.chdir("src/data")
-            with open("helpmsg.txt") as file:
-                self.create_file("help.txt", ETC, file.read())
-            with open("greetmsg.txt") as file:
-                self.create_file("hello.txt", HOME, file.read())
-            with open("hi.scr") as file:
-                self.create_file("hi", BIN, file.read())
-        except Exception as exc:
-            IO.write(f"\nKernel error - cannot initiate filesystem\n{exc}\nFilesystem might be corrupted and not functionate correctly, try to clear filesystem and try again\n", style=IO.Styles.error)
-            if self.__OPTIONS['verbose']:
-                print_exc() 
-                IO.write() # Whitespace
-            raise SystemExit
+        # Clears system
+        self.prune_system()
+        # Add folders
+        HOME: int = self.create_directory("home", self.__root)
+        BIN: int = self.create_directory("bin", self.__root)
+        ETC: int = self.create_directory("etc", self.__root)
+        # Add files
+        os.chdir("src/data")
+        with open("helpmsg.txt") as file:
+            self.create_file("help.txt", ETC, file.read())
+        with open("greetmsg.txt") as file:
+            self.create_file("hello.txt", HOME, file.read())
+        with open("hi.scr") as file:
+            self.create_file("hi", BIN, file.read())
+
+    def __initUsers(self) -> None:
+        cursor = self.__conn.cursor()
+        root: tuple[int] | None = cursor.execute("SELECT id FROM users WHERE login = 'root'").fetchone()
+        if root is not None:
+            cursor.close()
+            return
+        # Creates root user
+        saltBytes: bytes = bcrypt.gensalt() 
+        rootPassword: str = "" # TODO: load from option
+        hashedPassword: str = bcrypt.hashpw(rootPassword.encode(), saltBytes).decode()
+        salt: str = saltBytes.decode()
+        print(hashedPassword,  salt)
+        cursor.execute("INSERT INTO users (id, login, password, salt) VALUES (NULL, 'root', ?, ?)", [hashedPassword, salt])
+        self.__conn.commit()
+        cursor.close()
             
     # Public
     def is_file(self, id: int) -> bool:
