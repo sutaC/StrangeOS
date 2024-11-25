@@ -75,6 +75,7 @@ class Kernel:
         self.__conn.commit() # Adds tables if empty
         cursor.close()
 
+    # TODO: Add user directories
     def __initFilesystem(self) -> None:
         cursor = self.__conn.cursor()
         # Gets root dir

@@ -2,24 +2,30 @@ from utils import Shell
 from utils.io import IO
 
 def main(shell: Shell, segments: list[str]) -> int:
-    password: str
-    try:
-        password = input("Password: ")
-    except KeyboardInterrupt:
-        return 1
+    login: str = shell._user
+    if len(segments) > 1:
+        if shell._user != "root":
+            IO.write("Only root user can change others passwords")
+            return 1
+        login = segments[0]
     # (login: str, password: str, salt: str)
-    user = shell._KERNEL.get_user(shell._user)
+    user = shell._KERNEL.get_user(login)
     if user is None:
-        IO.write("Cannot reach user")
+        IO.write(f"Cannot find user {login}")
         return 1
-    hashed = shell._KERNEL.generate_hash(password, user[2])
-    if hashed != user[1]:
-        IO.write("Invalid password")
-        return 1
+    print(f"Changing password for {login}")
     newpassword: str
     try:
         newpassword = input("New password: ")
     except KeyboardInterrupt:
+        return 1
+    rnewpassword: str 
+    try:
+        rnewpassword = input("Repeat password: ")
+    except KeyboardInterrupt:
+        return 1
+    if newpassword != rnewpassword:
+        IO.write("Password and repeat password doesn't match")
         return 1
     shell._KERNEL.update_user_password(user[0], newpassword)
     IO.write(f"Password updated")
