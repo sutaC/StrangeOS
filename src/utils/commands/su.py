@@ -1,4 +1,6 @@
-def main(shell, segments: list[str]) -> int:
+from utils import Shell
+
+def main(shell: Shell, segments: list[str]) -> int:
     # (login: str, password: str, salt: str)
     user: tuple[str, str, str] | None
     while True:

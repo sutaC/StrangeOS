@@ -1,7 +1,8 @@
+from utils import Shell
 from utils.io import IO
 from utils.kernel import MissingNodeException
 
-def main(shell, segments: list[str]) -> int:
+def main(shell: Shell, segments: list[str]) -> int:
     nodeId: int
     try:
         nodeId = shell._KERNEL.get_node_path("/etc/help.txt")

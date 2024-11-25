@@ -1,7 +1,8 @@
+from utils import Shell
 from utils.io import IO
 from utils.kernel import MissingNodeException, NodeTypeException
 
-def main(shell, segments: list[str]) -> int:
+def main(shell: Shell, segments: list[str]) -> int:
     if len(segments) < 3:
         IO.write("Missing arguments")
         return 1

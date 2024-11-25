@@ -185,9 +185,6 @@ class Shell:
         return path[path.rfind("/") + 1:]
 
     # Public
-    def loginUser() -> None:
-        pass
-
     def runFile(self, path: str) -> int:
         nodeId: int
         try:

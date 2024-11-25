@@ -1,7 +1,8 @@
+from utils import Shell
 from utils.io import IO
 from utils.kernel import MissingNodeException, NodeNameConflictException, NodeTypeException
 
-def main(shell, segments: list[str]) -> int:
+def main(shell: Shell, segments: list[str]) -> int:
     if (len(segments) < 2):
         IO.write("Missing argument - path")
         return 1

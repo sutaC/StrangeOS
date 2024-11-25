@@ -1,8 +1,9 @@
+from utils import Shell
 from utils.io import IO
 from utils.kernel import MissingNodeException, NodeTypeException
 from colorama import Fore
 
-def main(shell, segments: list[str]) -> int:
+def main(shell: Shell, segments: list[str]) -> int:
     path = "."
     if(len(segments) > 1):
         path = segments[1]

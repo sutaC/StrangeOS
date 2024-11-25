@@ -1,7 +1,8 @@
+from utils import Shell
 from utils.io import IO
 from utils.kernel import MissingNodeException, NodeTypeException
 
-def main(shell, segments: list[str]) -> int:
+def main(shell: Shell, segments: list[str]) -> int:
     destination = ""
     if len(segments) > 1:
         destination = segments[1]
