@@ -1,4 +1,4 @@
-from utils.kernel import NodeNameConflictException
+from utils.kernel import MissingNodeException, NodeNameConflictException, NodeTypeException
 from utils import Shell
 from utils.io import IO
 
@@ -19,7 +19,7 @@ def main(shell: Shell, segments: list[str]) -> int:
     shell._KERNEL.create_user(login, password)
     try:
         shell._KERNEL.create_directory(login, shell._KERNEL.get_node_path("/home"))
-    except NodeNameConflictException:
+    except (NodeNameConflictException, MissingNodeException, NodeTypeException):
             IO.write(f"Could not create user directory in /home/{login}", style=IO.Styles.warning)
     IO.write(f"Created user {login}")
     return 0
