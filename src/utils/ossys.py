@@ -31,11 +31,11 @@ class System:
                 if result != 0 and result is not None:
                     IO.write(f"Task exited with code {result}", style=IO.Styles.dim)       
             except Exception as exc:
-                print(f"\nUnexpected error occurred\n{exc}\n", style=IO.Styles.error)
+                IO.write(f"\nUnexpected error occurred\n{exc}\n", style=IO.Styles.error)
                 if self._OPTIONS["verbose"]:
                     print_exc()
                     IO.write() # Whitespace
                 return
-        IO.write("Closing system...", style=IO.Styles.dim)
+        IO.write("\nClosing system...", style=IO.Styles.dim)
 
 

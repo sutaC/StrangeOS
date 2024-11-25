@@ -6,7 +6,7 @@ import os
 
 class SysOptions(TypedDict):
     sysname: str        # System name
-    username: str       # User name
+    rootpassword: str   # Password to root user
     dbdir: str          # Directory to filesystem database
     startlocation: str  # Direction where user is after system starts
     verbose: bool       # If true displays verbose error messages
@@ -25,7 +25,7 @@ def loadOptions() -> SysOptions | None:
 def getDefaultOptions() -> SysOptions:
     opt = SysOptions()
     opt['sysname'] = "system"
-    opt['username'] = "user"
+    opt['rootpassword'] = ""
     opt['dbdir'] = "filesystem.db"
     opt['startlocation'] = "/"
     opt['verbose'] = False

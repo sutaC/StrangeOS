@@ -39,11 +39,11 @@ Options must be saved in `options.json` file in root project directory. [Options
 
 ```
 {
-    # User name
-    username: str ("user")
-
     # System name
     sysname: str ("system")
+
+    # Password to root user
+    rootpassword: str ("user")
 
     # Directory to filesystem database
     dbdir: str ("filesystem.db")

@@ -1,6 +1,6 @@
 {
-    "username": "user",
     "sysname": "system",
+    "rootpassword": "",
     "dbdir": "filesystem.db",
     "startlocation": "/",
     "verbose": false,

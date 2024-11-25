@@ -18,6 +18,7 @@ class Shell:
         self._TASKC: TaskController =  taskController
         self._KERNEL: Kernel = kernel
         self._location: str = "/"
+        self._user: str | None = None
         # Sets initial location
         startlocation = self._joinPath(self.__OPTIONS["startlocation"])
         nodeId: int = None
@@ -31,8 +32,7 @@ class Shell:
         self.__loadCommands()
         IO.write("Loading shell scripts...", style=IO.Styles.dim)
         self.__loadScripts()
-        IO.write("Shell initialized", style=IO.Styles.dim)
-        IO.write(f"\nWelcome {self.__OPTIONS['username']}!")
+        IO.write("Shell initialized", end="\n\n", style=IO.Styles.dim)
 
     # Private
     def __loadCommands(self) -> None:
@@ -139,7 +139,7 @@ class Shell:
         if "/home/" in self._location[:6]:
             loc =  "~" + self._location[6:]     
         loc =  self._location
-        return f"{Style.BRIGHT}{Fore.GREEN}{self.__OPTIONS['username']}@{self.__OPTIONS['sysname']}{Fore.RESET}:{Fore.BLUE}{loc}{Fore.RESET}${Style.RESET_ALL} "
+        return f"{Style.BRIGHT}{Fore.GREEN}{self._user}@{self.__OPTIONS['sysname']}{Fore.RESET}:{Fore.BLUE}{loc}{Fore.RESET}${Style.RESET_ALL} "
 
     # Protected
     def _joinPath(self, destination: str) -> str:
@@ -185,6 +185,9 @@ class Shell:
         return path[path.rfind("/") + 1:]
 
     # Public
+    def loginUser() -> None:
+        pass
+
     def runFile(self, path: str) -> int:
         nodeId: int
         try:
@@ -205,6 +208,12 @@ class Shell:
         return 0
 
     def runInteractive(self) -> None:
+        # Is logged in
+        if self._user is None:
+            self.__interpretInstruction("su")() # Logs in
+            if self._user is None:
+                return
+        # Interactive shell
         instruction: str = IO.read(self.__getStyledInput())
         self._TASKC.addTask(self.__interpretInstruction(instruction))
         self._TASKC.addTask(self.runInteractive)

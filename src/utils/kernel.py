@@ -15,6 +15,8 @@ class SystemNodeException(Exception):
     pass
 class NodeHasChildrenException(Exception):
     pass
+class UserLoginException(Exception):
+    pass
 
 class Kernel:
     def __init__(self, options: SysOptions) -> None:
@@ -65,8 +67,7 @@ class Kernel:
         ''')
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                login TEXT NOT NULL, 
+                login TEXT PRIMARY KEY, 
                 password TEXT NOT NULL,
                 salt TEXT NOT NULL
             )
@@ -107,22 +108,51 @@ class Kernel:
             self.create_file("hi", BIN, file.read())
 
     def __initUsers(self) -> None:
-        cursor = self.__conn.cursor()
-        root: tuple[int] | None = cursor.execute("SELECT id FROM users WHERE login = 'root'").fetchone()
-        if root is not None:
-            cursor.close()
+        if self.get_user('root') is None:
+            self.create_user('root', self.__OPTIONS['rootpassword'])
             return
-        # Creates root user
-        saltBytes: bytes = bcrypt.gensalt() 
-        rootPassword: str = "" # TODO: load from option
-        hashedPassword: str = bcrypt.hashpw(rootPassword.encode(), saltBytes).decode()
-        salt: str = saltBytes.decode()
-        print(hashedPassword,  salt)
-        cursor.execute("INSERT INTO users (id, login, password, salt) VALUES (NULL, 'root', ?, ?)", [hashedPassword, salt])
-        self.__conn.commit()
-        cursor.close()
             
     # Public
+    # Users
+    def generate_hash(self, password: str, salt: str) -> str:
+        return bcrypt.hashpw(password.encode(), salt.encode()).decode()
+
+    # @returns (login: str, password: str, salt: str)
+    def get_user(self, login: str) -> tuple[str, str, str] | None:
+        cursor = self.__conn.cursor()
+        user: tuple[str, str, str] | None = cursor.execute("SELECT login, password, salt FROM users WHERE login = ?", [login]).fetchone()
+        cursor.close()
+        return user
+
+    def create_user(self, login: str, password: str) -> None:
+        if self.get_user(login) is not None:
+            raise UserLoginException
+        cursor = self.__conn.cursor()
+        salt: str = bcrypt.gensalt().decode()
+        hashedPassword: str = self.generate_hash(password, salt)
+        cursor.execute("INSERT INTO users (login, password, salt) VALUES (?, ?, ?)", [login, hashedPassword, salt])
+        self.__conn.commit()
+        cursor.close()
+
+    def update_user_password(self, login: str, password: str) -> None:
+        if self.get_user(login) is None:
+            raise UserLoginException("Missing user by login")
+        cursor = self.__conn.cursor()
+        salt: str = bcrypt.gensalt().decode() 
+        hashedPassword: str = self.generate_hash(password, salt)
+        cursor.execute("UPDATE users SET password = ?, salt = ? WHERE login = ?", [hashedPassword, salt, login])
+        self.__conn.commit()
+        cursor.close()
+
+    def delete_user(self, login: str) -> None:
+        if login == 'root':
+            raise UserLoginException("Cannot delete root user")
+        cursor = self.__conn.cursor()
+        cursor.execute("DELETE FROM users WHERE login = ?", [login])
+        self.__conn.commit()    
+        cursor.close()
+
+    # Filesystem
     def is_file(self, id: int) -> bool:
         cursor = self.__conn.cursor()
         node: tuple[str] | None = cursor.execute("SELECT type FROM nodes WHERE id = ?", [id]).fetchone()
