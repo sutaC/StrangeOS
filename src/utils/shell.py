@@ -209,6 +209,7 @@ class Shell:
         if self._user is None:
             self.__interpretInstruction("su")() # Logs in
             if self._user is None:
+                IO.write() # Whitespace
                 return
         # Interactive shell
         instruction: str = IO.read(self.__getStyledInput())

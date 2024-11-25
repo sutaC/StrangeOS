@@ -36,6 +36,6 @@ class System:
                     print_exc()
                     IO.write() # Whitespace
                 return
-        IO.write("\nClosing system...", style=IO.Styles.dim)
+        IO.write("Closing system...", style=IO.Styles.dim)
 
 
