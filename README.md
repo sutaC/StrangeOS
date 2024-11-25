@@ -43,8 +43,8 @@ Options must be saved in `options.json` file in root project directory. [Options
     # System name
     sysname: str ("system")
 
-    # Password to root user
-    rootpassword: str ("user")
+    # Initial password to root user
+    rootpassword: str ("")
 
     # Directory to filesystem database
     dbdir: str ("filesystem.db")
