@@ -30,7 +30,8 @@ root
 |-- etc
 |   `-- help.txt
 |-- home
-|   `-- hello.txt
+|   `-- root
+|       `-- hello.txt
 ```
 
 ### System options scheme:

@@ -75,7 +75,6 @@ class Kernel:
         self.__conn.commit() # Adds tables if empty
         cursor.close()
 
-    # TODO: Add user directories
     def __initFilesystem(self) -> None:
         cursor = self.__conn.cursor()
         # Gets root dir
@@ -99,12 +98,13 @@ class Kernel:
         HOME: int = self.create_directory("home", self.__root)
         BIN: int = self.create_directory("bin", self.__root)
         ETC: int = self.create_directory("etc", self.__root)
+        HROOT: int = self.create_directory("root", HOME)
         # Add files
         os.chdir("src/data")
         with open("helpmsg.txt") as file:
             self.create_file("help.txt", ETC, file.read())
         with open("greetmsg.txt") as file:
-            self.create_file("hello.txt", HOME, file.read())
+            self.create_file("hello.txt", HROOT, file.read())
         with open("hi.scr") as file:
             self.create_file("hi", BIN, file.read())
 

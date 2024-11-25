@@ -23,6 +23,9 @@ class System:
         self._SHELL: Shell = Shell(self._KERNEL, self._TASKC, self._OPTIONS)
 
     def run(self) -> None:
+        if not self._SHELL.logIn():
+            IO.write("\nClosing system...", style=IO.Styles.dim)
+            return
         self._TASKC.addTask(self._SHELL.runInteractive)
         while not self._TASKC.isEmpty():
             task = self._TASKC.getTask()

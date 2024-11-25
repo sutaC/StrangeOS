@@ -19,15 +19,6 @@ class Shell:
         self._KERNEL: Kernel = kernel
         self._location: str = "/"
         self._user: str | None = None
-        # Sets initial location
-        startlocation = self._joinPath(self.__OPTIONS["startlocation"])
-        nodeId: int = None
-        try:
-            nodeId = kernel.get_node_path(startlocation)
-        except (NodeTypeException, MissingNodeException):
-            IO.write("Could not find starting directory, seting init location to default", style=IO.Styles.warning)
-        if nodeId is not None:
-            self._location = startlocation
         IO.write("Loading shell commands...", style=IO.Styles.dim)
         self.__loadCommands()
         IO.write("Loading shell scripts...", style=IO.Styles.dim)
@@ -135,21 +126,31 @@ class Shell:
         return command
 
     def __getStyledInput(self) -> str:
-        loc = ""        
-        if "/home/" in self._location[:6]:
-            loc =  "~" + self._location[6:]     
-        loc =  self._location
+        loc: str = self._location
+        if self._location.startswith(f"/home/{self._user}"):
+            loc =  "~" + self._location[len(f"/home/{self._user}"):]     
         return f"{Style.BRIGHT}{Fore.GREEN}{self._user}@{self.__OPTIONS['sysname']}{Fore.RESET}:{Fore.BLUE}{loc}{Fore.RESET}${Style.RESET_ALL} "
+
+    def __setInitialLocation(self) -> None:
+        self._location = "/"
+        startlocation = self._joinPath(self.__OPTIONS["startlocation"])
+        nodeId: int = None
+        try:
+            nodeId = self._KERNEL.get_node_path(startlocation)
+        except (NodeTypeException, MissingNodeException):
+            IO.write(f"Could not find starting directory ({startlocation}), seting init location to default", style=IO.Styles.warning)
+        if nodeId is not None:
+            self._location = startlocation
 
     # Protected
     def _joinPath(self, destination: str) -> str:
         newDir: str = ""
         if len(destination) == 0 or destination == "~":
-            newDir = "/home"
+            newDir = f"/home/{self._user}"
         elif destination[0] == "/":
             newDir = destination
         elif destination[:2] == "~/":
-            newDir = "/home/" + destination[2:]
+            newDir = f"/home/{self._user}/" + destination[2:]
         else:
             newDir += self._location + "/" + destination
         # Path cleaning
@@ -185,6 +186,14 @@ class Shell:
         return path[path.rfind("/") + 1:]
 
     # Public
+    def logIn(self) -> bool:
+        self.__interpretInstruction("su")() # Logs in
+        if self._user is None:
+            return False
+        self.__setInitialLocation()
+        return True
+        
+
     def runFile(self, path: str) -> int:
         nodeId: int
         try:
@@ -205,13 +214,8 @@ class Shell:
         return 0
 
     def runInteractive(self) -> None:
-        # Is logged in
         if self._user is None:
-            self.__interpretInstruction("su")() # Logs in
-            if self._user is None:
-                IO.write() # Whitespace
-                return
-        # Interactive shell
+            raise Exception("Cannot run interactive shell without logging in")
         instruction: str = IO.read(self.__getStyledInput())
         self._TASKC.addTask(self.__interpretInstruction(instruction))
         self._TASKC.addTask(self.runInteractive)
