@@ -49,9 +49,6 @@ Options must be saved in `options.json` file in root project directory. [Options
     # Directory to filesystem database
     dbdir: str ("filesystem.db")
 
-    # Direction where user is after system starts
-    startlocation: str ("/")
-
     # If true displays verbose error messages
     verbose: bool (False)
 

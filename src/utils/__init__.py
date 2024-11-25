@@ -18,6 +18,10 @@ class Shell:
         pass
     def _pathGetBasename(self, path: str) -> str:
         pass
+    def _setInitialLocation(self) -> None:
+        pass
+    def logIn(self) -> bool:
+        pass
     def runFile(self, path: str) -> int:
         pass
     def runInteractive(self) -> None:

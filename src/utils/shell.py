@@ -131,14 +131,14 @@ class Shell:
             loc =  "~" + self._location[len(f"/home/{self._user}"):]     
         return f"{Style.BRIGHT}{Fore.GREEN}{self._user}@{self.__OPTIONS['sysname']}{Fore.RESET}:{Fore.BLUE}{loc}{Fore.RESET}${Style.RESET_ALL} "
 
-    def __setInitialLocation(self) -> None:
+    def _setInitialLocation(self) -> None:
         self._location = "/"
-        startlocation = self._joinPath(self.__OPTIONS["startlocation"])
+        startlocation = self._joinPath("~")
         nodeId: int = None
         try:
             nodeId = self._KERNEL.get_node_path(startlocation)
         except (NodeTypeException, MissingNodeException):
-            IO.write(f"Could not find starting directory ({startlocation}), seting init location to default", style=IO.Styles.warning)
+            IO.write(f"Could not find starting directory ({startlocation}), seting init location to root", style=IO.Styles.warning)
         if nodeId is not None:
             self._location = startlocation
 
@@ -188,10 +188,7 @@ class Shell:
     # Public
     def logIn(self) -> bool:
         self.__interpretInstruction("su")() # Logs in
-        if self._user is None:
-            return False
-        self.__setInitialLocation()
-        return True
+        return self._user is not None
         
 
     def runFile(self, path: str) -> int:

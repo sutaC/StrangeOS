@@ -1,5 +1,6 @@
 from utils import Shell
 from utils.io import IO
+import getpass
 
 def main(shell: Shell, segments: list[str]) -> int:
     login: str = shell._user
@@ -7,21 +8,21 @@ def main(shell: Shell, segments: list[str]) -> int:
         if shell._user != "root":
             IO.write("Only root user can change others passwords")
             return 1
-        login = segments[0]
+        login = segments[1]
     # (login: str, password: str, salt: str)
     user = shell._KERNEL.get_user(login)
     if user is None:
         IO.write(f"Cannot find user {login}")
         return 1
-    print(f"Changing password for {login}")
+    IO.write(f"Changing password for {login}")
     newpassword: str
     try:
-        newpassword = input("New password: ")
+        newpassword = getpass.getpass("New password: ")
     except KeyboardInterrupt:
         return 1
     rnewpassword: str 
     try:
-        rnewpassword = input("Repeat password: ")
+        rnewpassword = getpass.getpass("Repeat password: ")
     except KeyboardInterrupt:
         return 1
     if newpassword != rnewpassword:

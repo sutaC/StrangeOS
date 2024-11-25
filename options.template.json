@@ -2,7 +2,6 @@
     "sysname": "system",
     "rootpassword": "",
     "dbdir": "filesystem.db",
-    "startlocation": "/",
     "verbose": false,
     "segments": false
 }

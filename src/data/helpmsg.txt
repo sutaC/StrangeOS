@@ -18,6 +18,7 @@ mv [start path] [new path]  - moves node to given path
 mv [start path] [new path]  - copies node to given path
 su                          - switches current user
 passwd (user)               - updates password of given user (default is current user)
+useradd [login] (password)  - creates new user (default password is empty) # ROOTONLY
 exit                        - exits os
 
 ## Tips
