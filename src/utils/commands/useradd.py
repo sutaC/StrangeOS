@@ -10,6 +10,9 @@ def main(shell: Shell, segments: list[str]) -> int:
         IO.write("Missing argument - login")
         return 1
     login: str = segments[1] 
+    if not login.isalpha():
+        IO.write("Login can only contain letters")
+        return 1
     if shell._KERNEL.get_user(login) is not None:
         IO.write("User with that login already exists")
         return 1
